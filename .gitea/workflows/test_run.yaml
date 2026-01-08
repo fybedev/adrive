@@ -24,3 +24,5 @@ jobs:
           echo "✅ Flask server started successfully"
           kill $SERVER_PID
       - run: echo "🍏 This job's status is ${{ job.status }}."
+
+# https://git.fybe.dev/fybe_servers/adrive/actions/workflows/test_run.yaml/badge.svg?branch=main
