@@ -1,0 +1,11 @@
+__pycache__/
+.vscode/
+.DS_Store
+logs
+users.json
+db.json
+uploads/
+uploads/*
+update_db.py
+.idea/
+*.log

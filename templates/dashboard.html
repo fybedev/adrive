@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ADrive Share</title>
+    <script src="https://kit.fontawesome.com/972393379b.js" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="app">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <ul class="flashes">
+                {% for category, message in messages %}
+                <!-- category: message, error, info, warning -->
+                    <li class="{{ category }}"><strong>{{ message }}</strong></li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+        {% endwith %}
+        <div class="dashboard-container">
+            <div class="dashboard-top">
+                <div class="dashboard-meta">
+                    <h2>Dashboard of {{username}}</h2>
+                    <p style="color: gray; font-size: 15px; text-align: left;">
+                        You are managing {{ quota_usage }}GB out of {{ quota_gb }}GB.
+                    </p>
+                </div>
+
+                <!-- Quota donut visual -->
+                {% set r = 40 %}
+                {% set c = (2 * 3.141592653589793 * r) %}
+                {% if quota_gb and quota_gb > 0 %}
+                    {% set used = quota_usage %}
+                    {% set pct = (used / quota_gb) if quota_gb > 0 else 0 %}
+                {% else %}
+                    {% set used = 0 %}
+                    {% set pct = 0 %}
+                {% endif %}
+
+                {% if pct >= 0.9 %}
+                    {% set stroke_color = '#DF2935' %}
+                {% elif pct >= 0.6 %}
+                    {% set stroke_color = '#FDCA40' %}
+                {% else %}
+                    {% set stroke_color = '#3772FF' %}
+                {% endif %}
+
+                <div class="quota-block">
+                    <div class="quota-donut" role="img" aria-label="Quota usage">
+                        <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
+                            <g transform="translate(50,50)">
+                                <circle class="donut-ring" r="{{ r }}" cx="0" cy="0" fill="transparent" stroke-width="10" stroke-linecap="round"></circle>
+                                <circle class="donut-fill" r="{{ r }}" cx="0" cy="0" fill="transparent" stroke-width="10" stroke-linecap="round"
+                                    stroke-dasharray="{{ c }}" stroke-dashoffset="{{ (c * (1 - pct)) }}" stroke="{{ stroke_color }}"></circle>
+                            </g>
+                        </svg>
+                        <div class="quota-center">
+                            <div class="quota-percent">{{ (pct * 100) | round }}%</div>
+                            <div class="quota-number">{{ ('%.1f' % used) if (used is not none) else '0.0' }} / {{ ('%.1f' % quota_gb) if (quota_gb is not none) else '0.0' }} GB</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <table>
+                <tr>
+                    <th>Filename</th>
+                    <th>Code</th>
+                    <th>Reusable</th>
+                    <th>Download</th>
+                    <th>Delete</th>
+                </tr>
+                {% for file in files %}
+                <tr>
+                    <td>{{ file.file.rsplit('_', 1)[0] }}</td>
+                    <td>{{ file.code }}</td>
+                    <td>{{ 'Yes' if file.reusable else 'No' }}</td>
+                    <td>
+                        {% if file.reusable %}
+                        <a href="/download/{{ file.code }}">Download</a>
+                        {% else %}
+                        <a href="/download/{{ file.code }}" style="color: rgb(255, 162, 0);">Download and Delete</a>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if file.reusable %}
+                        <a href="/delete/{{ file.code }}" style="color: red;">Delete</a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+            <a href="/upload" class="sign-in-button" style="text-decoration: none; background: rgb(1, 60, 155)">Upload a New File</a>
+            <a href="/logout" class="sign-in-button" style="text-decoration: none; background: rgb(32, 0, 139)">Sign Out</a>
+
+        </div>
+
+
+    </div>
+
+    <script>
+        //document.getElementById("uploadBtn").addEventListener("click", uploadAnim);
+
+        function downloadClick(){
+            const codeEl = document.getElementById("codeInput");
+            const code = codeEl.value;
+            // clear input when clicked
+            codeEl.value = '';
+            const url = `/download/` + code;
+            location.href = url;
+        }
+        function uploadAnim(e) {
+            //if (document.getElementById("fileUpload").value == "") {
+            //    document.getElementById("uploadBtn").classList.add("redBtn");
+            //    document.getElementById("uploadBtn").value = "! ! !";
+            //    e.preventDefault();
+            //} else {
+            //    document.getElementById("uploadBtn").classList.add("yellowBtn");
+            //    document.getElementById("uploadBtn").value = "· · ·";
+            //}
+            if (!document.getElementById("fileUpload").value == "") {
+                document.getElementById("uploadBtn").classList.add("yellowBtn");
+                document.getElementById("uploadBtn").value = "· · ·";
+            }
+        }
+    </script>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

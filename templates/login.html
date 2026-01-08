@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ADrive Share</title>
+    <script src="https://kit.fontawesome.com/972393379b.js" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="app">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <ul class="flashes">
+                {% for category, message in messages %}
+                <!-- category: message, error, info, warning -->
+                    <li class="{{ category }}"><strong>{{ message }}</strong></li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+        {% endwith %}
+
+        <div class="form-section">
+            <h1>Sign In</h1>
+            <p style="color: gray; font-size: 15px; text-align: left;">
+                Enter your credentials to access your dashboard and manage your files.
+            </p>
+            <form id="loginForm" action="/login" method="post">
+                Username: <input type="text" name="username" id="username" placeholder="📋" required aria-required>
+                Passphrase: <input type="password" name="password" id="password" placeholder="🗝️"  aria-required>
+                <input type="submit" value="Sign In" id="uploadBtn">
+            </form>
+            
+            <a href="/register" class="sign-in-button" style="text-decoration: none; background: rgb(32, 0, 139)">Sign Up</a>
+            <a href="/upload" class="sign-in-button" style="text-decoration: none; background: rgb(1, 60, 155)">Guest</a>
+
+            <p style="color: gray; font-size: 11px; text-align: center;">Signing in is not required. You can at any time register and sign in to manage your existing codes for free.</p>
+
+        </div>
+
+
+    </div>
+
+    <script>
+        //document.getElementById("uploadBtn").addEventListener("click", uploadAnim);
+
+        function downloadClick(){
+            const codeEl = document.getElementById("codeInput");
+            const code = codeEl.value;
+            // clear input when clicked
+            codeEl.value = '';
+            const url = `/download/` + code;
+            location.href = url;
+        }
+        function uploadAnim(e) {
+            //if (document.getElementById("fileUpload").value == "") {
+            //    document.getElementById("uploadBtn").classList.add("redBtn");
+            //    document.getElementById("uploadBtn").value = "! ! !";
+            //    e.preventDefault();
+            //} else {
+            //    document.getElementById("uploadBtn").classList.add("yellowBtn");
+            //    document.getElementById("uploadBtn").value = "· · ·";
+            //}
+            if (!document.getElementById("fileUpload").value == "") {
+                document.getElementById("uploadBtn").classList.add("yellowBtn");
+                document.getElementById("uploadBtn").value = "· · ·";
+            }
+        }
+    </script>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

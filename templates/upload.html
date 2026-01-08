@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ADrive Share</title>
+    <script src="https://kit.fontawesome.com/972393379b.js" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="app">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <ul class="flashes">
+                {% for category, message in messages %}
+                <!-- category: message, error, info, warning -->
+                    <li class="{{ category }}"><strong>{{ message }}</strong></li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+        {% endwith %}
+
+        <div class="form-section">
+            <form id="uploadForm" action="/sendfile" method="post" enctype="multipart/form-data">
+                {% if loggedIn %}
+                <h4>You are currently logged in as {{ username }}.</h4>
+                {% else %}
+                <h4>You are currently not logged in.</h4>
+                {% endif %}
+                <span style="font-size: 20px;">
+                    <i class="fa-solid fa-server fa-xs" style="line-height: 25px; font-size: 15px; display: inline-block;"></i>
+                    <span id="mirrorText">Finding Nearby Mirror</span> <i class="fa-solid fa-circle-dot fa-beat-fade fa-2xs" style="color: #ff9500;" id="mirrorLogo"></i>
+                </span>
+                <span style="font-size: 20px;">
+                    <i class="fa-solid fa-server fa-xs" style="line-height: 25px; font-size: 15px; display: inline-block;"></i>
+                    Location Not Found <i class="fa-solid fa-circle-dot fa-2xs" style="color: #c10101;"></i>
+                </span>
+                <input type="file" name="file" id="fileUpload" required aria-required>
+                <input type="hidden" id="quotaGB" value="{{ quota_gb }}">
+                <input type="hidden" id="quotaUsedGB" value="{{ quota_usage }}">
+                <progress id="uploadProgress" value="0" max="100" style="display:none;width:100%;margin-top:8px"></progress>
+                <div id="uploadProgressText" style="display:none;font-size:13px;margin-top:4px">0%</div>
+                <div style="display: flex; flex-direction: row;">
+                    <input type="checkbox" name="reusable" style="display: inline-block;">
+                    <span>Reusable?</span>
+                </div>
+                <input type="submit" value="Upload" id="uploadBtn" onclick="uploadAnim()" style="transition-duration: 400ms;">
+            </form>
+            
+            <form>
+                <input type="text" id="codeInput">
+                <button type="button" value="Download" onclick="downloadClick()">Download</button>
+            </form>
+            {% if not loggedIn %}
+            <a href="/login" class="sign-in-button" style="text-decoration: none; background: rgb(0, 81, 139)">Sign In</a>
+            <a href="/register" class="sign-in-button" style="text-decoration: none; background: rgb(32, 0, 139)">Register</a><br> 
+            <p style="color: gray; font-size: 11px; text-align: center;">Signing in is not required. You can at any time register and sign in to manage your existing codes for free. You can manage up to 1GB of files.</p>
+            {% else %}
+            <a href="/dashboard" class="sign-in-button" style="text-decoration: none; background: blue">View Dashboard</a>
+            <a href="/logout" class="sign-in-button" style="text-decoration: none; background: rgb(79, 92, 178)">Sign Out</a>
+            {% endif %}
+
+        </div>
+
+
+    </div>
+
+    <script>
+        //document.getElementById("uploadBtn").addEventListener("click", uploadAnim);
+
+        function downloadClick(){
+            const codeEl = document.getElementById("codeInput");
+            const code = codeEl.value;
+            // clear input when clicked
+            codeEl.value = '';
+            const url = `/download/` + code;
+            location.href = url;
+        }
+        function uploadAnim(e) {
+            //if (document.getElementById("fileUpload").value == "") {
+            //    document.getElementById("uploadBtn").classList.add("redBtn");
+            //    document.getElementById("uploadBtn").value = "! ! !";
+            //    e.preventDefault();
+            //} else {
+            //    document.getElementById("uploadBtn").classList.add("yellowBtn");
+            //    document.getElementById("uploadBtn").value = "· · ·";
+            //}
+            if (!document.getElementById("fileUpload").value == "") {
+                document.getElementById("uploadBtn").classList.add("yellowBtn");
+                document.getElementById("uploadBtn").value = "· · ·";
+            }
+        }
+    </script>
+
+    <script>
+        // Client-side quota check before uploading large files
+        (function(){
+            const fileInput = document.getElementById('fileUpload');
+            const uploadBtn = document.getElementById('uploadBtn');
+            const quotaGB = parseFloat(document.getElementById('quotaGB').value) || 0;
+            const usedGB = parseFloat(document.getElementById('quotaUsedGB').value) || 0;
+            const remainingGB = Math.max(0, quotaGB - usedGB);
+
+            function ensureFlashesContainer(){
+                let flashes = document.querySelector('.flashes');
+                if (!flashes){
+                    flashes = document.createElement('ul');
+                    flashes.className = 'flashes';
+                    const app = document.querySelector('.app');
+                    if (app) app.insertBefore(flashes, app.firstChild);
+                }
+                return flashes;
+            }
+
+            function clearClientFlash(){
+                const flashes = document.querySelectorAll('.flashes li.client-quota-warning');
+                flashes.forEach(n => n.remove());
+            }
+
+            function showClientFlash(message){
+                clearClientFlash();
+                const flashes = ensureFlashesContainer();
+                const li = document.createElement('li');
+                li.className = 'warning client-quota-warning';
+                const strong = document.createElement('strong');
+                strong.textContent = message;
+                li.appendChild(strong);
+                flashes.prepend(li);
+            }
+
+            if (fileInput){
+                fileInput.addEventListener('change', function(e){
+                    clearClientFlash();
+                    uploadBtn.disabled = false;
+                    const f = fileInput.files && fileInput.files[0];
+                    if (!f) return;
+                    const fileGB = f.size / (1024 * 1024 * 1024);
+                    if (fileGB > remainingGB){
+                        showClientFlash('You do not have sufficient quota to manage this file. If you choose to upload this file, you will not be able to manage it through your dashboard.');
+                        // still allow upload; server will accept but will not set owner when quota insufficient
+                    } else {
+                        clearClientFlash();
+                    }
+                });
+            }
+        })();
+    </script>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

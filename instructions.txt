@@ -1,0 +1,2 @@
+run 'screen' then hit enter 2 times
+run 'sh run.sh'
