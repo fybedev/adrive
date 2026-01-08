@@ -8,11 +8,13 @@ jobs:
     steps:
       - name: Checkout repository code
         uses: actions/checkout@v4
+      - name: Create virtual environment
+        run: python3 -m venv venv
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: ./venv/bin/pip install -r requirements.txt
       - name: Run Flask Server and Health Check
         run: |
-          python3 app.py &
+          ./venv/bin/python3 app.py &
           SERVER_PID=$!
           sleep 2
           if ! kill -0 $SERVER_PID 2>/dev/null; then
