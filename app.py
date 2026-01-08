@@ -11,7 +11,6 @@ from utils import redirect, dbload, dbsave, udbload, udbsave
 from werkzeug.exceptions import RequestEntityTooLarge
 from werkzeug.utils import secure_filename
 
-import sys
 import os
 import random
 import threading
