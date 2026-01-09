@@ -1,0 +1,14 @@
+.idea
+__pycache__
+.git
+.dockerignore
+Dockerfile
+*.md
+db.json
+users.json
+test.py
+update_db.py
+logs
+*.log
+.vscode
+uploads/
