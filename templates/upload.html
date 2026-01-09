@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -7,58 +8,87 @@
     <title>ADrive Share</title>
     <script src="https://kit.fontawesome.com/972393379b.js" crossorigin="anonymous"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
+
 <body>
     <div class="app">
         {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
-            <ul class="flashes">
-                {% for category, message in messages %}
-                <!-- category: message, error, info, warning -->
-                    <li class="{{ category }}"><strong>{{ message }}</strong></li>
-                {% endfor %}
-            </ul>
+        <ul class="flashes">
+            {% for category, message in messages %}
+            <!-- category: message, error, info, warning -->
+            {% if category == 'message' %}
+                {% set category = 'primary' %}
+            {% endif %}
+            {% if category == 'error' %}
+                {% set category = 'danger' %}
+            {% endif %}
+            {% if category == 'info' %}
+                {% set category = 'info' %}
+            {% endif %}
+            {% if category == 'warning' %}
+                {% set category = 'warning' %}
+            {% endif %}
+            <li class="alert alert-{{ category }}">{{ message }}</li>
+            {% endfor %}
+        </ul>
         {% endif %}
         {% endwith %}
 
         <div class="form-section">
             <form id="uploadForm" action="/sendfile" method="post" enctype="multipart/form-data">
                 {% if loggedIn %}
-                <h4>You are currently logged in as {{ username }}.</h4>
+                <h1>ADrive File Sharing <span class="badge text-bg-primary">{{ username }}</span></h1>
                 {% else %}
-                <h4>You are currently not logged in.</h4>
+                <h1>ADrive File Sharing <span class="badge text-bg-primary">Guest</span></h1>
                 {% endif %}
                 <span style="font-size: 20px;">
-                    <i class="fa-solid fa-server fa-xs" style="line-height: 25px; font-size: 15px; display: inline-block;"></i>
-                    <span id="mirrorText">Finding Nearby Mirror</span> <i class="fa-solid fa-circle-dot fa-beat-fade fa-2xs" style="color: #ff9500;" id="mirrorLogo"></i>
+                    <i class="fa-solid fa-server fa-xs"
+                        style="line-height: 25px; font-size: 15px; display: inline-block;"></i>
+                    <span id="mirrorText">Finding Nearby Mirror</span> <i
+                        class="fa-solid fa-circle-dot fa-beat-fade fa-2xs" style="color: #ff9500;" id="mirrorLogo"></i>
                 </span>
                 <span style="font-size: 20px;">
-                    <i class="fa-solid fa-server fa-xs" style="line-height: 25px; font-size: 15px; display: inline-block;"></i>
+                    <i class="fa-solid fa-server fa-xs"
+                        style="line-height: 25px; font-size: 15px; display: inline-block;"></i>
                     Location Not Found <i class="fa-solid fa-circle-dot fa-2xs" style="color: #c10101;"></i>
                 </span>
-                <input type="file" name="file" id="fileUpload" required aria-required>
+                <input type="file" name="file" id="fileUpload" class="form-control" required aria-required>
                 <input type="hidden" id="quotaGB" value="{{ quota_gb }}">
                 <input type="hidden" id="quotaUsedGB" value="{{ quota_usage }}">
-                <progress id="uploadProgress" value="0" max="100" style="display:none;width:100%;margin-top:8px"></progress>
-                <div id="uploadProgressText" style="display:none;font-size:13px;margin-top:4px">0%</div>
-                <div style="display: flex; flex-direction: row;">
-                    <input type="checkbox" name="reusable" style="display: inline-block;">
-                    <span>Reusable?</span>
+                    <div class="progress" id="uploadProgressContainer" style="display:none;width:100%;margin-top:8px">
+                        <div id="uploadProgress" class="progress-bar bg-success" role="progressbar" style="width:0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+                    </div>
+                    <div id="uploadProgressText" style="display:none;font-size:13px;margin-top:4px">0%</div>
+                <div class="input-group mb-3">
+                    <div class="input-group-text">
+                        <input class="form-check-input mt-0" type="checkbox" value="" name="reusable"
+                            aria-label="Checkbox for following text input" style="border: 1px solid rgb(106, 106, 106);">
+                        <label for="reusable" style="margin-left: 6px; margin-bottom: 0;">Reusable
+                            Link</label>
+                    </div>
                 </div>
-                <input type="submit" value="Upload" id="uploadBtn" onclick="uploadAnim()" style="transition-duration: 400ms;">
+                <input type="submit" class="" value="Upload" id="uploadBtn" onclick="uploadAnim()"
+                    style="transition-duration: 400ms;">
             </form>
-            
+
             <form>
                 <input type="text" id="codeInput">
-                <button type="button" value="Download" onclick="downloadClick()">Download</button>
+                <button type="button" value="Download" class="btn btn-primary" onclick="downloadClick()">Download</button>
             </form>
             {% if not loggedIn %}
-            <a href="/login" class="sign-in-button" style="text-decoration: none; background: rgb(0, 81, 139)">Sign In</a>
-            <a href="/register" class="sign-in-button" style="text-decoration: none; background: rgb(32, 0, 139)">Register</a><br> 
-            <p style="color: gray; font-size: 11px; text-align: center;">Signing in is not required. You can at any time register and sign in to manage your existing codes for free. You can manage up to 1GB of files.</p>
+            <a href="/login" class="sign-in-button" style="text-decoration: none; background: rgb(0, 81, 139)">Sign
+                In</a>
+            <a href="/register" class="sign-in-button"
+                style="text-decoration: none; background: rgb(32, 0, 139)">Register</a><br><br>
+            <p style="color: gray; font-size: 11px; text-align: center;">Signing in is not required. You can at any time
+                register and sign in to manage your existing codes for free. You can manage up to 1GB of files.</p>
             {% else %}
-            <a href="/dashboard" class="sign-in-button" style="text-decoration: none; background: blue">View Dashboard</a>
-            <a href="/logout" class="sign-in-button" style="text-decoration: none; background: rgb(79, 92, 178)">Sign Out</a>
+            <a href="/dashboard" class="sign-in-button" style="text-decoration: none; background: blue">View
+                Dashboard</a>
+            <a href="/logout" class="sign-in-button" style="text-decoration: none; background: rgb(79, 92, 178)">Sign
+                Out</a>
             {% endif %}
 
         </div>
@@ -69,7 +99,7 @@
     <script>
         //document.getElementById("uploadBtn").addEventListener("click", uploadAnim);
 
-        function downloadClick(){
+        function downloadClick() {
             const codeEl = document.getElementById("codeInput");
             const code = codeEl.value;
             // clear input when clicked
@@ -95,16 +125,16 @@
 
     <script>
         // Client-side quota check before uploading large files
-        (function(){
+        (function () {
             const fileInput = document.getElementById('fileUpload');
             const uploadBtn = document.getElementById('uploadBtn');
             const quotaGB = parseFloat(document.getElementById('quotaGB').value) || 0;
             const usedGB = parseFloat(document.getElementById('quotaUsedGB').value) || 0;
             const remainingGB = Math.max(0, quotaGB - usedGB);
 
-            function ensureFlashesContainer(){
+            function ensureFlashesContainer() {
                 let flashes = document.querySelector('.flashes');
-                if (!flashes){
+                if (!flashes) {
                     flashes = document.createElement('ul');
                     flashes.className = 'flashes';
                     const app = document.querySelector('.app');
@@ -113,12 +143,12 @@
                 return flashes;
             }
 
-            function clearClientFlash(){
+            function clearClientFlash() {
                 const flashes = document.querySelectorAll('.flashes li.client-quota-warning');
                 flashes.forEach(n => n.remove());
             }
 
-            function showClientFlash(message){
+            function showClientFlash(message) {
                 clearClientFlash();
                 const flashes = ensureFlashesContainer();
                 const li = document.createElement('li');
@@ -129,14 +159,14 @@
                 flashes.prepend(li);
             }
 
-            if (fileInput){
-                fileInput.addEventListener('change', function(e){
+            if (fileInput) {
+                fileInput.addEventListener('change', function (e) {
                     clearClientFlash();
                     uploadBtn.disabled = false;
                     const f = fileInput.files && fileInput.files[0];
                     if (!f) return;
                     const fileGB = f.size / (1024 * 1024 * 1024);
-                    if (fileGB > remainingGB){
+                    if (fileGB > remainingGB) {
                         showClientFlash('You do not have sufficient quota to manage this file. If you choose to upload this file, you will not be able to manage it through your dashboard.');
                         // still allow upload; server will accept but will not set owner when quota insufficient
                     } else {
@@ -148,5 +178,10 @@
     </script>
 
     <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
+    crossorigin="anonymous"></script>
 </body>
+
 </html>
+

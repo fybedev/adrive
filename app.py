@@ -11,7 +11,6 @@ from utils import redirect, dbload, dbsave, udbload, udbsave
 from werkzeug.exceptions import RequestEntityTooLarge
 from werkzeug.utils import secure_filename
 
-import sys
 import os
 import random
 import threading
@@ -39,32 +38,51 @@ def index():
 
 @app.route('/dashboard')
 def dashboard():
+    # Load Databases
+    db = dbload()
+    udb = udbload()
+    
+    # Check if user is a guest
     if session.get('loggedIn', False) == False:
         flash('You must be signed in to view the dashboard!', 'error')
         return redirect(url_for('upload'))
-    db = dbload()
-    udb = udbload()
+    
+    # Get user quota, usage, and files
     username = session.get('username')
     userfiles = []
     quota_usage_gb = 0
+    
     if not username:
         flash('An error occurred. Please sign in again.', 'error')
         session['loggedIn'] = False
         session.pop('username', None)
         return redirect(url_for('upload'))
+    
     for file in db['files']:
         if db['files'][file].get('owner') == username:
             db['files'][file]['file'] = file
             db['files'][file]['code'] = file.split('_')[-1]
             userfiles.append(db['files'][file])
+            
     for userfile in userfiles:
         usf_mb = userfile['size_megabytes']
         if usf_mb:
             quota_usage_gb += usf_mb / 1024
+            
     quota_usage_gb = round(quota_usage_gb, 1)
-    return render_template('dashboard.html', files=userfiles, username=username, quota_gb=udb[[user['username'] for user in udb].index(username)]['quota_gb'], quota_usage=quota_usage_gb)
+    
+    # Render template with variables
+    return render_template(
+        'dashboard.html',
+        files=userfiles,
+        username=username,
+        quota_gb=udb[[user['username'] for user in udb].index(username)]['quota_gb'],
+        quota_usage=quota_usage_gb
+    )
+
 @app.route('/logout')
 def logout():
+    # Sign out user and redirect to upload page
     session['loggedIn'] = False
     session.pop('username', None)
     flash('Successfully signed out!', 'info')
@@ -72,43 +90,53 @@ def logout():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    # Load User Database (UDB)
     udb = udbload()
     
     if request.method == 'GET':
         return render_template('login.html')
     if request.method == 'POST':
+        # Get data from form
         username = request.form.get('username')
         password = request.form.get('password')
 
+        # Check if user exists and password matches, log them in
         for user in udb:
             if user['username'] == username and user['password'] == password:
                 session['loggedIn'] = True
                 session['username'] = username
                 flash('Successfully signed in!', 'info')
                 return redirect(url_for('upload'))
+    
+    # If still here, login failed
     flash('Invalid username or password!', 'error')
     return redirect(url_for('login'))
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
+    # Load User Database (UDB)
     udb = udbload()
     
     if request.method == 'GET':
         return render_template('register.html')
     if request.method == 'POST':
+        # Get data from form
         username = request.form.get('username')
         password = request.form.get('password')
 
+        # Check if username is already taken
         for user in udb:
             if user['username'] == username:
                 flash('Username already taken!', 'error')
                 return redirect(url_for('register'))
         
+        # Create new user with default quota of 3GB
         udb.append({
             'username': username,
             'password': password,
             'quota_gb': 3
         })
+        
         udbsave(udb)
         flash('Successfully registered! You can now sign in.', 'info')
         return redirect(url_for('login'))

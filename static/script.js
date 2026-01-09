@@ -19,6 +19,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const fileInput = document.getElementById('fileUpload');
     const progress = document.getElementById('uploadProgress');
+    const progressContainer = document.getElementById('uploadProgressContainer');
     const progressText = document.getElementById('uploadProgressText');
     const uploadBtn = document.getElementById('uploadBtn');
 
@@ -42,8 +43,10 @@ document.addEventListener('DOMContentLoaded', function() {
             if (ev.lengthComputable) {
                 const percent = Math.round((ev.loaded / ev.total) * 100);
                 if (progress) {
-                    progress.style.display = 'block';
-                    progress.value = percent;
+                    if (progressContainer) progressContainer.style.display = 'block';
+                    progress.style.width = percent + '%';
+                    progress.setAttribute('aria-valuenow', percent);
+                    progress.textContent = percent + '%';
                 }
                 if (progressText) {
                     progressText.style.display = 'block';
@@ -76,13 +79,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 } catch (e) {
                     window.location.href = '/upload';
                     return;
-                } finally {
+                    } finally {
                     if (uploadBtn) {
                         uploadBtn.disabled = false;
                         uploadBtn.classList.remove('yellowBtn');
                         uploadBtn.value = 'Upload';
                     }
-                    if (progress) { progress.style.display = 'none'; progress.value = 0; }
+                    if (progress) {
+                        if (progressContainer) progressContainer.style.display = 'none';
+                        progress.style.width = '0%';
+                        progress.setAttribute('aria-valuenow', 0);
+                        progress.textContent = '0%';
+                    }
                     if (progressText) { progressText.style.display = 'none'; progressText.textContent = '0%'; }
                     // clear file input and reusable checkbox after successful upload
                     if (fileInput) fileInput.value = '';
@@ -110,7 +118,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 uploadBtn.value = 'Upload';
             }
             if (fileInput) fileInput.value = '';
-            if (progress) { progress.style.display = 'none'; progress.value = 0; }
+            if (progress) {
+                if (progressContainer) progressContainer.style.display = 'none';
+                progress.style.width = '0%';
+                progress.setAttribute('aria-valuenow', 0);
+                progress.textContent = '0%';
+            }
             if (progressText) progressText.style.display = 'none';
         });
 
