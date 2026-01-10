@@ -11,6 +11,8 @@ from flask import (
 from utils import redirect, dbload, dbsave, udbload, udbsave
 from werkzeug.exceptions import RequestEntityTooLarge
 from werkzeug.utils import secure_filename
+from werkzeug.middleware.proxy_fix import ProxyFix
+
 
 import os
 import random
@@ -26,6 +28,7 @@ app = Flask('adrive', static_folder='static', template_folder='templates')
 app.config['UPLOAD_DIRECTORY'] = 'uploads/'
 app.config['MAX_CONTENT_LENGTH'] = 1000000 * 1024 * 1024
 app.config['SECRET_KEY'] = str(random.randint(99999, 9999999))
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1)
 
 # Redirect logs to the file 'logs'
 handler = logging.handlers.RotatingFileHandler('logs', maxBytes=1024 * 1024)
@@ -36,21 +39,38 @@ app.logger.addHandler(handler)
 
 @app.route('/get-location')
 def get_location():
-    # Get IP (handling Docker/Proxy headers)
+    # 1. Try to get the forwarded IP first (for Docker/Production)
     user_ip = request.headers.get('X-Forwarded-For', request.remote_addr)
+    
+    # 2. If it's a list (e.g. "1.2.3.4, 172.17.0.1"), take the first one
     if user_ip and ',' in user_ip:
         user_ip = user_ip.split(',')[0].strip()
 
-    # Localhost testing fix
-    if user_ip in ['127.0.0.1', 'localhost', '::1']:
-        user_ip = '8.8.8.8' 
+    # 3. Clean up any weird local addresses
+    if user_ip in ['127.0.0.1', 'localhost', '::1'] or user_ip.startswith('172.'):
+        # Fallback for testing only
+        return jsonify({"status": "success", "city": "Seoul", "country": "South Korea", "isp": "Test ISP"})
 
     try:
-        # Use a fast, reliable API
-        response = requests.get(f'http://ip-api.com/json/{user_ip}', timeout=5)
-        return jsonify(response.json())
-    except:
-        return jsonify({"status": "fail"}), 500
+        # Use HTTPS to be safer
+        response = requests.get(f'https://ipapi.co/{user_ip}/json/', timeout=5)
+        data = response.json()
+        return jsonify({
+            "status": "success",
+            "city": data.get('city', 'Unknown'),
+            "country": data.get('country_name', 'Unknown'),
+            "isp": data.get('org', 'Unknown ISP')
+        })
+    except Exception as e:
+        return jsonify({"status": "fail", "error": str(e)}), 500
+    
+@app.route('/check-ip')
+def check_ip():
+    return {
+        "remote_addr": request.remote_addr,
+        "x_forwarded_for": request.headers.get('X-Forwarded-For'),
+        "actual_ip_used": request.headers.get('X-Forwarded-For', request.remote_addr)
+    }
 
 @app.route('/ping')
 def ping():
