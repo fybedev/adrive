@@ -74,7 +74,7 @@
             </form>
 
             <form>
-                <input type="text" id="codeInput">
+                <input type="text" class="form-control" id="codeInput">
                 <button type="button" value="Download" class="btn btn-primary" onclick="downloadClick()">Download</button>
             </form>
             {% if not loggedIn %}
@@ -83,7 +83,7 @@
             <a href="/register" class="sign-in-button"
                 style="text-decoration: none; background: rgb(32, 0, 139)">Register</a><br><br>
             <p style="color: gray; font-size: 11px; text-align: center;">Signing in is not required. You can at any time
-                register and sign in to manage your existing codes for free. You can manage up to 1GB of files.</p>
+                register and sign in to manage your existing codes for free. You can manage up to 3GB of files.</p>
             {% else %}
             <a href="/dashboard" class="sign-in-button" style="text-decoration: none; background: blue">View
                 Dashboard</a>
