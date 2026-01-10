@@ -13,12 +13,24 @@
     <div class="app">
         {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
-            <ul class="flashes">
-                {% for category, message in messages %}
-                <!-- category: message, error, info, warning -->
-                    <li class="{{ category }}"><strong>{{ message }}</strong></li>
-                {% endfor %}
-            </ul>
+        <ul class="flashes">
+            {% for category, message in messages %}
+            <!-- category: message, error, info, warning -->
+            {% if category == 'message' %}
+                {% set category = 'primary' %}
+            {% endif %}
+            {% if category == 'error' %}
+                {% set category = 'danger' %}
+            {% endif %}
+            {% if category == 'info' %}
+                {% set category = 'info' %}
+            {% endif %}
+            {% if category == 'warning' %}
+                {% set category = 'warning' %}
+            {% endif %}
+            <li class="alert alert-{{ category }}">{{ message }}</li>
+            {% endfor %}
+        </ul>
         {% endif %}
         {% endwith %}
 
