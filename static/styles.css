@@ -172,6 +172,13 @@ button[type='button']:hover,
     flex-shrink: 0;
 }
 
+/* Bootstrap-Friendly Table Design */
+table {
+    font-size: 15px;
+}
+table tr td {
+    font-weight: light;
+}
 
 /* Styled select for forms */
 .fancy-select,
