@@ -5,7 +5,8 @@ from flask import (
     request,
     url_for,
     send_from_directory,
-    flash
+    flash,
+    jsonify
 )
 from utils import redirect, dbload, dbsave, udbload, udbsave
 from werkzeug.exceptions import RequestEntityTooLarge
@@ -15,6 +16,7 @@ import os
 import random
 import threading
 import time
+import requests
 
 import logging
 import logging.handlers
@@ -31,6 +33,28 @@ logging.getLogger('werkzeug').setLevel(logging.DEBUG)
 logging.getLogger('werkzeug').addHandler(handler)
 app.logger.setLevel(logging.WARNING)
 app.logger.addHandler(handler)
+
+@app.route('/get-location')
+def get_location():
+    # Get IP (handling Docker/Proxy headers)
+    user_ip = request.headers.get('X-Forwarded-For', request.remote_addr)
+    if user_ip and ',' in user_ip:
+        user_ip = user_ip.split(',')[0].strip()
+
+    # Localhost testing fix
+    if user_ip in ['127.0.0.1', 'localhost', '::1']:
+        user_ip = '8.8.8.8' 
+
+    try:
+        # Use a fast, reliable API
+        response = requests.get(f'http://ip-api.com/json/{user_ip}', timeout=5)
+        return jsonify(response.json())
+    except:
+        return jsonify({"status": "fail"}), 500
+
+@app.route('/ping')
+def ping():
+    return jsonify({"status": "ok"})
 
 @app.route('/')
 def index():

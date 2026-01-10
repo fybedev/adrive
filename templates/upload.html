@@ -41,18 +41,18 @@
                 {% if loggedIn %}
                 <h1>ADrive File Sharing <span class="badge text-bg-primary">{{ username }}</span></h1>
                 {% else %}
-                <h1>ADrive File Sharing <span class="badge text-bg-primary">Guest</span></h1>
+                <h1>ADrive File Sharing <span class="badge text-bg-danger">Guest</span></h1>
                 {% endif %}
-                <span style="font-size: 20px;">
-                    <i class="fa-solid fa-server fa-xs"
+                <!-- <span style="font-size: 20px;">
+                    <i class="fa-solid fa-wifi fa-xs"
                         style="line-height: 25px; font-size: 15px; display: inline-block;"></i>
-                    <span id="mirrorText">Finding Nearby Mirror</span> <i
+                    <span id="mirrorText">Ping: <span id="ping-value">CONNECTING</span>ms</span> <i
                         class="fa-solid fa-circle-dot fa-beat-fade fa-2xs" style="color: #ff9500;" id="mirrorLogo"></i>
-                </span>
-                <span style="font-size: 20px;">
-                    <i class="fa-solid fa-server fa-xs"
+                </span> -->
+                <span style="font-size: 20px; padding-bottom: 7px;">
+                    <i class="fa-solid fa-location fa-xs"
                         style="line-height: 25px; font-size: 15px; display: inline-block;"></i>
-                    Location Not Found <i class="fa-solid fa-circle-dot fa-2xs" style="color: #c10101;"></i>
+                    <span id="location-display" class="loading">Locating...</span> <i class="fa-solid fa-circle-dot fa-2xs" id="mirrorLogo" style="color: #c10101;"></i> <span class="badge text-bg-primary"><span id="ping-value">..</span>ms</span></span>
                 </span>
                 <input type="file" name="file" id="fileUpload" class="form-control" required aria-required>
                 <input type="hidden" id="quotaGB" value="{{ quota_gb }}">
@@ -63,7 +63,7 @@
                     <div id="uploadProgressText" style="display:none;font-size:13px;margin-top:4px">0%</div>
                 <div class="input-group mb-3">
                     <div class="input-group-text">
-                        <input class="form-check-input mt-0" type="checkbox" value="" name="reusable"
+                        <input class="form-check-input mt-0" type="checkbox" value="" id="reusableCheck" name="reusable"
                             aria-label="Checkbox for following text input" style="border: 1px solid rgb(106, 106, 106);">
                         <label for="reusable" style="margin-left: 6px; margin-bottom: 0;">Reusable
                             Link</label>
@@ -175,6 +175,63 @@
                 });
             }
         })();
+    </script>
+
+    <script>
+        function measurePing() {
+            const start = Date.now();
+            
+            fetch('/ping')
+                .then(() => {
+                    const end = Date.now();
+                    const latency = end - start;
+                    document.getElementById('ping-value').innerText = latency;
+                })
+                .catch(err => {
+                    document.getElementById('ping-value').innerText = "Error";
+                });
+        }
+
+        document.getElementById("fileUpload").disabled = true;
+        document.getElementById("uploadBtn").disabled = true;
+        document.getElementById("codeInput").disabled = true;
+        document.getElementById("reusableCheck").disabled = true;
+        // Measure ping immediately on load
+        setTimeout(() => {
+            document.getElementById("mirrorLogo").classList.remove("fa-beat-fade");
+            document.getElementById("mirrorLogo").style.color = "green";
+            measurePing();
+            document.getElementById("fileUpload").disabled = false;
+            document.getElementById("codeInput").disabled = false;
+            document.getElementById("uploadBtn").disabled = false;
+            document.getElementById("reusableCheck").disabled = false;
+
+
+        }, 1000);
+
+
+        setInterval(() => {
+            measurePing();
+        }, 1000); // Update every 30 seconds
+    </script>
+    <script>
+        async function loadLocation() {
+            try {
+                const response = await fetch('/get-location');
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    document.getElementById('location-display').innerHTML = 
+                        `${data.city}, ${data.country} <small>(${data.isp})</small>`;
+                    document.getElementById('location-display').classList.remove('loading');
+                } else {
+                    throw new Error();
+                }
+            } catch (err) {
+                document.getElementById('location-display').innerText = "Unknown Location";
+            }
+        }
+        loadLocation();
     </script>
 
     <script src="{{ url_for('static', filename='script.js') }}"></script>
