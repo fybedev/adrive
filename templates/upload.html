@@ -52,7 +52,7 @@
                 <span style="font-size: 20px; padding-bottom: 7px;">
                     <i class="fa-solid fa-location fa-xs"
                         style="line-height: 25px; font-size: 15px; display: inline-block;"></i>
-                    <span id="location-display" class="loading">Locating...</span> <i class="fa-solid fa-circle-dot fa-2xs" id="mirrorLogo" style="color: #c10101;"></i> <span class="badge text-bg-primary"><span id="ping-value">..</span>ms</span></span>
+                    <span id="location-display" class="loading">Locating...</span> <i class="fa-solid fa-circle-dot fa-2xs" id="mirrorLogo" style="color: #c10101;"></i> <span class="badge text-bg-primary" id="ping-badge"><span id="ping-status"></span> <span id="ping-value">..</span>ms</span></span>
                 </span>
                 <input type="file" name="file" id="fileUpload" class="form-control" required aria-required>
                 <input type="hidden" id="quotaGB" value="{{ quota_gb }}">
@@ -186,6 +186,16 @@
                     const end = Date.now();
                     const latency = end - start;
                     document.getElementById('ping-value').innerText = latency;
+                    if (latency > 200) {
+                        document.getElementById('ping-status').innerText = "BAD";
+                        document.getElementById('ping-badge').className = "badge text-bg-danger";
+                    } else if (latency > 100) {
+                        document.getElementById('ping-status').innerText = "GOOD";
+                        document.getElementById('ping-badge').className = "badge text-bg-success";
+                    } else if (latency <= 100) {
+                        document.getElementById('ping-status').innerText = "BEST";
+                        document.getElementById('ping-badge').className = "badge text-bg-primary";
+                    }
                 })
                 .catch(err => {
                     document.getElementById('ping-value').innerText = "Error";
