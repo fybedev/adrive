@@ -1,17 +1,4 @@
-if (localStorage.getItem("loaded")) {
-    document.getElementById("mirrorLogo").className = "fa-solid fa-circle-dot fa-2xs";
-    document.getElementById("mirrorText").textContent = "drive.fybe.dev";
-    document.getElementById("mirrorLogo").style.color = "#47cc00";
-} else {
-    setTimeout(() => {
-        document.getElementById("mirrorLogo").style.color = "#47cc00";
-        document.getElementById("mirrorText").textContent = "drive.fybe.dev";
-        setTimeout(() => {
-            document.getElementById("mirrorLogo").className = "fa-solid fa-circle-dot fa-2xs";
-            localStorage.setItem("loaded", true);
-        }, 3000);
-    }, 3000);
-}
+
 
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('uploadForm');
