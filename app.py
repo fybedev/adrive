@@ -39,30 +39,42 @@ app.logger.addHandler(handler)
 
 @app.route('/get-location')
 def get_location():
-    # 1. Try to get the forwarded IP first (for Docker/Production)
+    # Since you said /check-ip shows the correct IP, we use it directly
     user_ip = request.headers.get('X-Forwarded-For', request.remote_addr)
     
-    # 2. If it's a list (e.g. "1.2.3.4, 172.17.0.1"), take the first one
+    # Clean the IP if it's a list
     if user_ip and ',' in user_ip:
         user_ip = user_ip.split(',')[0].strip()
 
-    # 3. Clean up any weird local addresses
-    if user_ip in ['127.0.0.1', 'localhost', '::1'] or user_ip.startswith('172.'):
-        # Fallback for testing only
-        return jsonify({"status": "success", "city": "Seoul", "country": "South Korea", "isp": "Test ISP"})
-
     try:
-        # Use HTTPS to be safer
-        response = requests.get(f'https://ipapi.co/{user_ip}/json/', timeout=5)
+        # 1. We MUST send a User-Agent header or the API will block the request
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0'
+        }
+        
+        # 2. Use ip-api.com (it's the most 'forgiving' for free testing)
+        response = requests.get(
+            f'http://ip-api.com/json/{user_ip}', 
+            headers=headers, 
+            timeout=5
+        )
+        
         data = response.json()
-        return jsonify({
-            "status": "success",
-            "city": data.get('city', 'Unknown'),
-            "country": data.get('country_name', 'Unknown'),
-            "isp": data.get('org', 'Unknown ISP')
-        })
+        
+        if data.get('status') == 'success':
+            return jsonify({
+                "status": "success",
+                "city": data.get('city'),
+                "country": data.get('country')
+            })
+        else:
+            # This helps you debug: what did the API actually say?
+            print(f"API Error Message: {data.get('message')}")
+            
     except Exception as e:
-        return jsonify({"status": "fail", "error": str(e)}), 500
+        print(f"Python Request Failed: {e}")
+    
+    return jsonify({"status": "fail", "city": "Unknown", "country": "Location"})
     
 @app.route('/check-ip')
 def check_ip():
