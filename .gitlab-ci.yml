@@ -1,0 +1,25 @@
+
+stages:   
+  - setup       # List of stages for jobs, and their order of execution
+  - test
+
+install-requirements:
+    stage: setup
+    script:
+      - python3 -m venv venv
+      - ./venv/bin/pip install -r requirements.txt
+
+test-flask:   # This job runs in the test stage.
+  stage: test    # It only starts when the job in the requirement install stage completes successfully.
+  script: |
+    - echo "Running Flask Server Tests"
+    - ./venv/bin/python3 app.py & 
+    SERVER_PID=$!
+    sleep 2
+    if ! kill -0 $SERVER_PID 2>/dev/null; then
+      echo "❌ Flask server failed to start"
+      exit 1
+    fi
+    echo "✅ Flask server started successfully"
+    kill $SERVER_PID
+    - echo "Job worked"
