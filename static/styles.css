@@ -63,11 +63,68 @@ html {
     transition: border-color 0.3s ease;
 }
 
+@media screen and (max-width: 768px) {
+    .app {
+        width: 95%;
+        padding: 20px;
+        border-radius: 4px;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .app {
+        width: 100%;
+        padding: 15px;
+        border: none;
+        border-radius: 0;
+    }
+}
+
 .form-section {
     padding: 15px 0 0 15px;
     width: 100%;
     color: var(--text-color);
     flex-shrink: 0;
+}
+
+@media screen and (max-width: 768px) {
+    .form-section h1 {
+        font-size: 1.5rem;
+    }
+    
+    .form-section h1 .badge {
+        font-size: 0.8rem;
+    }
+    
+    .form-section p {
+        font-size: 13px !important;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .form-section {
+        padding: 10px 0 0 0;
+    }
+    
+    .form-section h1 {
+        font-size: 1.25rem;
+        word-break: break-word;
+    }
+    
+    .form-section h1 .badge {
+        font-size: 0.7rem;
+        display: block;
+        width: fit-content;
+        margin-top: 5px;
+    }
+    
+    .form-section span {
+        font-size: 14px !important;
+    }
+    
+    .form-section .badge {
+        font-size: 11px !important;
+    }
 }
 
 @media screen and (max-width: 1200px) {
@@ -131,6 +188,37 @@ button[type='button'],
     background-image: linear-gradient(to bottom, var(--blue-light), var(--blue));
     transition: box-shadow .2s ease;
     margin-bottom: 30px;
+}
+
+@media screen and (max-width: 768px) {
+    input[type='submit'],
+    button[type='button'],
+    .sign-in-button {
+        font-size: 18px;
+        padding: 12px 16px;
+        margin-bottom: 20px;
+    }
+    
+    input[type='file'],
+    input[type='text'],
+    input[type='password'] {
+        font-size: 16px;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    input[type='submit'],
+    button[type='button'],
+    .sign-in-button {
+        font-size: 16px;
+        padding: 10px 14px;
+        width: 100%;
+    }
+    
+    .btn {
+        width: 100%;
+        font-size: 16px !important;
+    }
 }
 
 input[type='submit']:hover,
@@ -226,13 +314,70 @@ body.dark-mode .warn {
     flex-shrink: 0;
 }
 
+@media screen and (max-width: 768px) {
+    .dashboard-container {
+        padding: 10px;
+    }
+    
+    .dashboard-container h2 {
+        font-size: 1.5rem;
+    }
+    
+    .dashboard-container p {
+        font-size: 13px !important;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .dashboard-container {
+        padding: 5px;
+    }
+    
+    .dashboard-container h2 {
+        font-size: 1.25rem;
+    }
+}
+
 /* Bootstrap-Friendly Table Design */
 table {
     font-size: 15px;
+    width: 100%;
+    display: table;
 }
 
 table tr td {
     font-weight: light;
+}
+
+@media screen and (max-width: 768px) {
+    table {
+        font-size: 13px;
+    }
+    
+    table th,
+    table td {
+        padding: 8px 4px !important;
+    }
+}
+
+@media screen and (max-width: 600px) {
+    table {
+        font-size: 12px;
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    table thead {
+        display: table-header-group;
+    }
+    
+    table th,
+    table td {
+        padding: 6px 3px !important;
+        font-size: 11px;
+    }
 }
 
 /* Styled select for forms */
@@ -294,6 +439,22 @@ select.fancy-select::-ms-expand {
     min-width: 180px;
 }
 
+@media screen and (max-width: 600px) {
+    .dashboard-top {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+    
+    .dashboard-meta {
+        min-width: 100%;
+    }
+    
+    .quota-block {
+        align-self: center;
+    }
+}
+
 /* Theme Toggle Button */
 .theme-toggle {
     position: fixed;
@@ -315,6 +476,16 @@ select.fancy-select::-ms-expand {
     z-index: 1000;
 }
 
+@media screen and (max-width: 480px) {
+    .theme-toggle {
+        top: 10px;
+        right: 10px;
+        width: 40px;
+        height: 40px;
+        font-size: 18px;
+    }
+}
+
 .theme-toggle:hover {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     transform: scale(1.1);
@@ -322,6 +493,25 @@ select.fancy-select::-ms-expand {
 
 body.dark-mode .theme-toggle {
     box-shadow: 0 2px 8px rgba(255, 255, 255, 0.2);
+}
+
+/* Progress bar mobile styles */
+@media screen and (max-width: 768px) {
+    .progress {
+        height: 20px;
+        font-size: 12px;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .progress {
+        height: 18px;
+        font-size: 11px;
+    }
+    
+    .input-group-text {
+        font-size: 14px !important;
+    }
 }
 
 .quota-block {
@@ -394,14 +584,29 @@ body.dark-mode .theme-toggle {
 
 @media (max-width: 520px) {
     .quota-donut {
-        width: 64px;
-        height: 64px;
+        width: 90px;
+        height: 90px;
     }
 
     .quota-number {
-        font-size: 12px;
+        font-size: 10px;
     }
 
+    .quota-percent {
+        font-size: 16px;
+    }
+}
+
+@media (max-width: 380px) {
+    .quota-donut {
+        width: 80px;
+        height: 80px;
+    }
+    
+    .quota-number {
+        font-size: 9px;
+    }
+    
     .quota-percent {
         font-size: 14px;
     }
