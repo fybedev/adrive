@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -9,7 +10,11 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
+
 <body>
+    <button class="theme-toggle" id="themeToggle" title="Toggle dark mode">
+        <i class="fas fa-moon"></i>
+    </button>
     <div class="app">
         {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
@@ -17,16 +22,16 @@
             {% for category, message in messages %}
             <!-- category: message, error, info, warning -->
             {% if category == 'message' %}
-                {% set category = 'primary' %}
+            {% set category = 'primary' %}
             {% endif %}
             {% if category == 'error' %}
-                {% set category = 'danger' %}
+            {% set category = 'danger' %}
             {% endif %}
             {% if category == 'info' %}
-                {% set category = 'info' %}
+            {% set category = 'info' %}
             {% endif %}
             {% if category == 'warning' %}
-                {% set category = 'warning' %}
+            {% set category = 'warning' %}
             {% endif %}
             <li class="alert alert-{{ category }}">{{ message }}</li>
             {% endfor %}
@@ -37,20 +42,28 @@
         <div class="form-section">
             <h1>Sign Up </h1>
             <p style="color: gray; font-size: 15px; text-align: left;">
-                With an account, you can manage up to 3GB in one dashboard. If you use up your limit, you can delete to free up space or upload files without the ability to manage them.
+                With an account, you can manage up to 3GB in one dashboard. If you use up your limit, you can delete to
+                free up space or upload files without the ability to manage them.
             </p>
             <form id="loginForm" action="/register" method="post">
-                Username: <input type="text" class="form-control" name="username" id="username" placeholder="📋" required aria-required>
-                Passphrase: <input type="password" class="form-control" name="password" id="password" placeholder="🗝️"  aria-required>
-                Managable Storage Quota: <select name="quota_files" id="quota_files" class="fancy-select" disabled aria-disabled>
-                <option value="3GB">3GB</option>
+                Username: <input type="text" class="form-control" name="username" id="username" placeholder="📋"
+                    required aria-required>
+                Passphrase: <input type="password" class="form-control" name="password" id="password" placeholder="🗝️"
+                    aria-required>
+                Managable Storage Quota: <select name="quota_files" id="quota_files" class="fancy-select" disabled
+                    aria-disabled>
+                    <option value="3GB">3GB</option>
                 </select>
-                <input type="submit" class="sign-in-button" style="background: rgb(32, 0, 139)" value="Sign Up" id="uploadBtn">
+                <input type="submit" class="sign-in-button" style="background: rgb(32, 0, 139)" value="Sign Up"
+                    id="uploadBtn">
             </form>
-            
-            <a class="sign-in-button" href="/login" style="background: rgb(0, 95, 139); text-decoration: none;" id="signininstead">Sign In Instead</a>
-            <a href="/upload" class="sign-in-button" style="text-decoration: none; background: rgb(1, 60, 155)">Guest</a>
-            <p style="color: gray; font-size: 11px; text-align: center;">Signing in is not required. You can at any time register and sign in to manage your existing codes for free.</p>
+
+            <a class="sign-in-button" href="/login" style="background: rgb(0, 95, 139); text-decoration: none;"
+                id="signininstead">Sign In Instead</a>
+            <a href="/upload" class="sign-in-button"
+                style="text-decoration: none; background: rgb(1, 60, 155)">Guest</a>
+            <p style="color: gray; font-size: 11px; text-align: center;">Signing in is not required. You can at any time
+                register and sign in to manage your existing codes for free.</p>
 
         </div>
 
@@ -60,7 +73,7 @@
     <script>
         //document.getElementById("uploadBtn").addEventListener("click", uploadAnim);
 
-        function downloadClick(){
+        function downloadClick() {
             const codeEl = document.getElementById("codeInput");
             const code = codeEl.value;
             // clear input when clicked
@@ -86,7 +99,8 @@
 
     <script src="{{ url_for('static', filename='script.js') }}"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
-    integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
-    crossorigin="anonymous"></script>
+        integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
+        crossorigin="anonymous"></script>
 </body>
+
 </html>

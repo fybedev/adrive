@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -9,7 +10,11 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
+
 <body>
+    <button class="theme-toggle" id="themeToggle" title="Toggle dark mode">
+        <i class="fas fa-moon"></i>
+    </button>
     <div class="app">
         {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
@@ -17,16 +22,16 @@
             {% for category, message in messages %}
             <!-- category: message, error, info, warning -->
             {% if category == 'message' %}
-                {% set category = 'primary' %}
+            {% set category = 'primary' %}
             {% endif %}
             {% if category == 'error' %}
-                {% set category = 'danger' %}
+            {% set category = 'danger' %}
             {% endif %}
             {% if category == 'info' %}
-                {% set category = 'info' %}
+            {% set category = 'info' %}
             {% endif %}
             {% if category == 'warning' %}
-                {% set category = 'warning' %}
+            {% set category = 'warning' %}
             {% endif %}
             <li class="alert alert-{{ category }}">{{ message }}</li>
             {% endfor %}
@@ -40,15 +45,20 @@
                 Enter your credentials to access your dashboard and manage your files.
             </p>
             <form id="loginForm" action="/login" method="post">
-                Username: <input type="text" class="form-control" name="username" id="username" placeholder="📋" required aria-required>
-                Passphrase: <input type="password" class="form-control" name="password" id="password" placeholder="🗝️"  aria-required>
+                Username: <input type="text" class="form-control" name="username" id="username" placeholder="📋"
+                    required aria-required>
+                Passphrase: <input type="password" class="form-control" name="password" id="password" placeholder="🗝️"
+                    aria-required>
                 <input type="submit" value="Sign In" id="uploadBtn">
             </form>
-            
-            <a href="/register" class="sign-in-button" style="text-decoration: none; background: rgb(32, 0, 139)">Sign Up</a>
-            <a href="/upload" class="sign-in-button" style="text-decoration: none; background: rgb(1, 60, 155)">Guest</a>
 
-            <p style="color: gray; font-size: 11px; text-align: center;">Signing in is not required. You can at any time register and sign in to manage your existing codes for free.</p>
+            <a href="/register" class="sign-in-button" style="text-decoration: none; background: rgb(32, 0, 139)">Sign
+                Up</a>
+            <a href="/upload" class="sign-in-button"
+                style="text-decoration: none; background: rgb(1, 60, 155)">Guest</a>
+
+            <p style="color: gray; font-size: 11px; text-align: center;">Signing in is not required. You can at any time
+                register and sign in to manage your existing codes for free.</p>
 
         </div>
 
@@ -58,7 +68,7 @@
     <script>
         //document.getElementById("uploadBtn").addEventListener("click", uploadAnim);
 
-        function downloadClick(){
+        function downloadClick() {
             const codeEl = document.getElementById("codeInput");
             const code = codeEl.value;
             // clear input when clicked
@@ -84,7 +94,8 @@
 
     <script src="{{ url_for('static', filename='script.js') }}"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
-    integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
-    crossorigin="anonymous"></script>
+        integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
+        crossorigin="anonymous"></script>
 </body>
+
 </html>
