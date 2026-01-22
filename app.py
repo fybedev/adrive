@@ -8,7 +8,10 @@ from flask import (
     flash,
     jsonify
 )
+
 from tools.utils import redirect, dbload, dbsave, udbload, udbsave
+from tools.geo_loc import geo_loc_bp
+
 from werkzeug.exceptions import RequestEntityTooLarge
 from werkzeug.utils import secure_filename
 from werkzeug.middleware.proxy_fix import ProxyFix
@@ -29,6 +32,7 @@ app.config['UPLOAD_DIRECTORY'] = 'uploads/'
 app.config['MAX_CONTENT_LENGTH'] = 1000000 * 1024 * 1024
 app.config['SECRET_KEY'] = str(random.randint(99999, 9999999))
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1)
+app.register_blueprint(geo_loc_bp)
 
 handler = logging.handlers.RotatingFileHandler('logs', maxBytes=1024 * 1024)
 logging.getLogger('werkzeug').setLevel(logging.DEBUG)
@@ -36,68 +40,19 @@ logging.getLogger('werkzeug').addHandler(handler)
 app.logger.setLevel(logging.WARNING)
 app.logger.addHandler(handler)
 
-@app.route('/get-location')
-def get_location():
-    user_ip = request.headers.get('X-Forwarded-For', request.remote_addr)
-    
-    if user_ip and ',' in user_ip:
-        user_ip = user_ip.split(',')[0].strip()
-
-    try:
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0'
-        }
-        
-        response = requests.get(
-            f'http://ip-api.com/json/{user_ip}', 
-            headers=headers, 
-            timeout=5
-        )
-        
-        data = response.json()
-        
-        if data.get('status') == 'success':
-            return jsonify({
-                "status": "success",
-                "city": data.get('city'),
-                "country": data.get('country')
-            })
-        else:
-            print(f"API Error Message: {data.get('message')}")
-            
-    except Exception as e:
-        print(f"Python Request Failed: {e}")
-    
-    return jsonify({"status": "fail", "city": "Unknown", "country": "Location"})
-    
-@app.route('/check-ip')
-def check_ip():
-    return {
-        "remote_addr": request.remote_addr,
-        "x_forwarded_for": request.headers.get('X-Forwarded-For'),
-        "actual_ip_used": request.headers.get('X-Forwarded-For', request.remote_addr)
-    }
-
-@app.route('/ping')
-def ping():
-    return jsonify({"status": "ok"})
-
 @app.route('/')
 def index():
     return redirect(url_for('upload'))
 
 @app.route('/dashboard')
 def dashboard():
-    # Load Databases
     db = dbload()
     udb = udbload()
     
-    # Check if user is a guest
     if session.get('loggedIn', False) == False:
         flash('You must be signed in to view the dashboard!', 'error')
         return redirect(url_for('upload'))
     
-    # Get user quota, usage, and files
     username = session.get('username')
     userfiles = []
     quota_usage_gb = 0
@@ -140,17 +95,14 @@ def logout():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    # Load User Database (UDB)
     udb = udbload()
     
     if request.method == 'GET':
         return render_template('login.html')
     if request.method == 'POST':
-        # Get data from form
         username = request.form.get('username')
         password = request.form.get('password')
 
-        # Check if user exists and password matches, log them in
         for user in udb:
             if user['username'] == username and user['password'] == password:
                 session['loggedIn'] = True
@@ -158,29 +110,24 @@ def login():
                 flash('Successfully signed in!', 'info')
                 return redirect(url_for('upload'))
     
-    # If still here, login failed
     flash('Invalid username or password!', 'error')
     return redirect(url_for('login'))
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
-    # Load User Database (UDB)
     udb = udbload()
     
     if request.method == 'GET':
         return render_template('register.html')
     if request.method == 'POST':
-        # Get data from form
         username = request.form.get('username')
         password = request.form.get('password')
 
-        # Check if username is already taken
         for user in udb:
             if user['username'] == username:
                 flash('Username already taken!', 'error')
                 return redirect(url_for('register'))
         
-        # Create new user with default quota of 3GB
         udb.append({
             'username': username,
             'password': password,
@@ -201,7 +148,6 @@ def upload():
         if loggedIn and username:
             db = dbload()
             udb = udbload()
-            # find user record in udb
             user_rec = None
             for u in udb:
                 if u.get('username') == username:
@@ -221,7 +167,6 @@ def upload():
                     quota_usage_gb += usf_mb / 1024
             quota_usage_gb = round(quota_usage_gb, 1)
         else:
-            # not logged in: treat as guest with 1GB manageable quota
             quota_gb = 5.0
             quota_usage_gb = 0.0
     except Exception:
@@ -247,11 +192,9 @@ def sendfile():
                 dest_name = secure_filename(file.filename) + f'_{fileid}'
                 dest_path = os.path.join(app.config['UPLOAD_DIRECTORY'], dest_name)
 
-                # save file first, then inspect size on disk
                 file.save(dest_path)
                 print(dest_name)
 
-                # get file size in bytes and convert to MB/GB
                 try:
                     size_bytes = os.path.getsize(dest_path)
                 except Exception:
@@ -259,19 +202,16 @@ def sendfile():
                 size_megabytes = round(size_bytes / (1024 * 1024), 1)
                 file_gb = size_megabytes / 1024
 
-                # determine user's remaining quota
                 remaining_gb = None
                 if loggedIn and username:
                     try:
                         udb = udbload()
-                        # find user record
                         user_rec = None
                         for u in udb:
                             if u.get('username') == username:
                                 user_rec = u
                                 break
                         user_quota_gb = user_rec.get('quota_gb', 0) if user_rec else 0
-                        # compute current usage
                         usage_gb = 0.0
                         for fkey, fval in db.get('files', {}).items():
                             if fval.get('owner') == username:
@@ -283,10 +223,8 @@ def sendfile():
                     except Exception:
                         remaining_gb = 0.0
                 else:
-                    # guests: they don't get owner set; treat remaining as 0 so owner won't be set
                     remaining_gb = 0.0
 
-                # build DB entry; only set owner if user is logged in AND file fits remaining quota
                 entry = {"reusable": True if reusable else False, "size_megabytes": size_megabytes}
                 if loggedIn and username and file_gb <= remaining_gb:
                     entry["owner"] = username
