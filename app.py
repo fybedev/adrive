@@ -8,7 +8,7 @@ from flask import (
     flash,
     jsonify
 )
-from utils import redirect, dbload, dbsave, udbload, udbsave
+from tools.utils import redirect, dbload, dbsave, udbload, udbsave
 from werkzeug.exceptions import RequestEntityTooLarge
 from werkzeug.utils import secure_filename
 from werkzeug.middleware.proxy_fix import ProxyFix
@@ -30,7 +30,6 @@ app.config['MAX_CONTENT_LENGTH'] = 1000000 * 1024 * 1024
 app.config['SECRET_KEY'] = str(random.randint(99999, 9999999))
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1)
 
-# Redirect logs to the file 'logs'
 handler = logging.handlers.RotatingFileHandler('logs', maxBytes=1024 * 1024)
 logging.getLogger('werkzeug').setLevel(logging.DEBUG)
 logging.getLogger('werkzeug').addHandler(handler)
@@ -39,20 +38,16 @@ app.logger.addHandler(handler)
 
 @app.route('/get-location')
 def get_location():
-    # Since you said /check-ip shows the correct IP, we use it directly
     user_ip = request.headers.get('X-Forwarded-For', request.remote_addr)
     
-    # Clean the IP if it's a list
     if user_ip and ',' in user_ip:
         user_ip = user_ip.split(',')[0].strip()
 
     try:
-        # 1. We MUST send a User-Agent header or the API will block the request
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0'
         }
         
-        # 2. Use ip-api.com (it's the most 'forgiving' for free testing)
         response = requests.get(
             f'http://ip-api.com/json/{user_ip}', 
             headers=headers, 
@@ -68,7 +63,6 @@ def get_location():
                 "country": data.get('country')
             })
         else:
-            # This helps you debug: what did the API actually say?
             print(f"API Error Message: {data.get('message')}")
             
     except Exception as e:
