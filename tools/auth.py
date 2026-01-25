@@ -9,9 +9,12 @@ from flask import (
     flash,
     url_for
 )
-from tools.utils import *
+from tools.db_auth import *
+from lightdb import LightDB
 
 auth_bp = Blueprint('auth', __name__)
+
+l_db = LightDB()
 
 @auth_bp.route('/logout')
 def logout():
@@ -23,46 +26,35 @@ def logout():
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
-    udb = udbload()
-    
     if request.method == 'GET':
         return render_template('login.html')
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
 
-        for user in udb:
-            if user['username'] == username and user['password'] == password:
-                session['loggedIn'] = True
-                session['username'] = username
-                flash('Successfully signed in!', 'info')
-                return redirect(url_for('upload'))
+        if check_if_auth(username, password):
+            session['loggedIn'] = True
+            session['username'] = username
+            flash('Successfully signed in!', 'info')
+            return redirect(url_for('upload'))
     
     flash('Invalid username or password!', 'error')
-    return redirect(url_for('login'))
+    return redirect(url_for('auth.login'))
 
 @auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
-    udb = udbload()
-    
     if request.method == 'GET':
         return render_template('register.html')
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
 
-        for user in udb:
-            if user['username'] == username:
-                flash('Username already taken!', 'error')
-                return redirect(url_for('register'))
+        if check_if_user_exists(username):
+            flash('Username already exists!', 'error')
+            return redirect(url_for('auth.register'))
         
-        udb.append({
-            'username': username,
-            'password': password,
-            'quota_gb': 3
-        })
+        register_user(username, password, quota_gb=3)
         
-        udbsave(udb)
         flash('Successfully registered! You can now sign in.', 'info')
-        return redirect(url_for('login'))
+        return redirect(url_for('auth.login'))
     
