@@ -9,7 +9,6 @@ from flask import (
     flash,
     url_for
 )
-from tools.utils import *
 from tools.db_auth import *
 from lightdb import LightDB
 
@@ -44,26 +43,18 @@ def login():
 
 @auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
-    udb = udbload()
-    
     if request.method == 'GET':
         return render_template('register.html')
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
 
-        for user in udb:
-            if user['username'] == username:
-                flash('Username already taken!', 'error')
-                return redirect(url_for('register'))
+        if check_if_user_exists(username):
+            flash('Username already exists!', 'error')
+            return redirect(url_for('auth.register'))
         
-        udb.append({
-            'username': username,
-            'password': password,
-            'quota_gb': 3
-        })
+        register_user(username, password, quota_gb=3)
         
-        udbsave(udb)
         flash('Successfully registered! You can now sign in.', 'info')
         return redirect(url_for('auth.login'))
     
