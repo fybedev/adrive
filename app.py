@@ -9,8 +9,11 @@ from flask import (
     jsonify
 )
 
+# TODO move to lightdb instead of json dbload and dbsave
 from tools.utils import redirect, dbload, dbsave, udbload, udbsave
+from lightdb import LightDB
 from tools.geo_loc import geo_loc_bp
+from tools.auth import auth_bp
 
 from werkzeug.exceptions import RequestEntityTooLarge
 from werkzeug.utils import secure_filename
@@ -21,11 +24,11 @@ import os
 import random
 import threading
 import time
-import requests
 
-import logging
-import logging.handlers
+# import logging
+# import logging.handlers
 
+l_db = LightDB()
 
 app = Flask('adrive', static_folder='static', template_folder='templates')
 app.config['UPLOAD_DIRECTORY'] = 'uploads/'
@@ -33,12 +36,13 @@ app.config['MAX_CONTENT_LENGTH'] = 1000000 * 1024 * 1024
 app.config['SECRET_KEY'] = str(random.randint(99999, 9999999))
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1)
 app.register_blueprint(geo_loc_bp)
+app.register_blueprint(auth_bp)
 
-handler = logging.handlers.RotatingFileHandler('logs', maxBytes=1024 * 1024)
-logging.getLogger('werkzeug').setLevel(logging.DEBUG)
-logging.getLogger('werkzeug').addHandler(handler)
-app.logger.setLevel(logging.WARNING)
-app.logger.addHandler(handler)
+# handler = logging.handlers.RotatingFileHandler('logs', maxBytes=1024 * 1024)
+# logging.getLogger('werkzeug').setLevel(logging.DEBUG)
+# logging.getLogger('werkzeug').addHandler(handler)
+# app.logger.setLevel(logging.WARNING)
+# app.logger.addHandler(handler)
 
 @app.route('/')
 def index():
