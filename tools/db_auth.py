@@ -27,8 +27,6 @@ def list_users() -> list:
 def check_if_auth(username: str, password: str) -> bool:
     global l_db
     for user in l_db['users']:
-        print(user)
         if user.get('username') == username and user.get('password') == password:
-            print('authenticated!')
             return True
     return False
