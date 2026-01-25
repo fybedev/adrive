@@ -10,7 +10,7 @@ from flask import (
 )
 
 # TODO move to lightdb instead of json dbload and dbsave
-from tools.utils import redirect, dbload, dbsave, udbload, udbsave
+from tools.utils import redirect
 from lightdb import LightDB
 from tools.geo_loc import geo_loc_bp
 from tools.auth import auth_bp
@@ -50,8 +50,8 @@ def index():
 
 @app.route('/dashboard')
 def dashboard():
-    db = dbload()
-    udb = udbload()
+    db = l_db['files']
+    udb = l_db['users']
     
     if session.get('loggedIn', False) == False:
         flash('You must be signed in to view the dashboard!', 'error')
@@ -67,11 +67,11 @@ def dashboard():
         session.pop('username', None)
         return redirect(url_for('upload'))
     
-    for file in db['files']:
-        if db['files'][file].get('owner') == username:
-            db['files'][file]['file'] = file
-            db['files'][file]['code'] = file.split('_')[-1]
-            userfiles.append(db['files'][file])
+    for file in db:
+        if db[file].get('owner') == username:
+            db[file]['file'] = file
+            db[file]['code'] = file.split('_')[-1]
+            userfiles.append(db[file])
             
     for userfile in userfiles:
         usf_mb = userfile['size_megabytes']
@@ -91,14 +91,14 @@ def dashboard():
 
 @app.route('/upload')
 def upload():
+    db = l_db['files']
+    udb = l_db['users']
     loggedIn = session.get('loggedIn', False)
     username = session.get('username', '')
     quota_gb = None
     quota_usage_gb = 0.0
     try:
         if loggedIn and username:
-            db = dbload()
-            udb = udbload()
             user_rec = None
             for u in udb:
                 if u.get('username') == username:
@@ -109,9 +109,9 @@ def upload():
             else:
                 quota_gb = 0
             userfiles = []
-            for file in db.get('files', {}):
-                if db['files'][file].get('owner') == username:
-                    userfiles.append(db['files'][file])
+            for file in db:
+                if db[file].get('owner') == username:
+                    userfiles.append(db[file])
             for userfile in userfiles:
                 usf_mb = userfile.get('size_megabytes', 0)
                 if usf_mb:
@@ -128,7 +128,8 @@ def upload():
 
 @app.route('/sendfile', methods=['POST'])
 def sendfile():
-        db = dbload()
+        db = l_db['files']
+        udb = l_db['users']
         file = request.files['file']
         reusable = request.form.get('reusable')
         loggedIn = session.get('loggedIn', False)
@@ -156,7 +157,7 @@ def sendfile():
                 remaining_gb = None
                 if loggedIn and username:
                     try:
-                        udb = udbload()
+                        udb = l_db['users']
                         user_rec = None
                         for u in udb:
                             if u.get('username') == username:
@@ -180,14 +181,13 @@ def sendfile():
                 if loggedIn and username and file_gb <= remaining_gb:
                     entry["owner"] = username
 
-                db["files"][dest_name] = entry
+                db[dest_name] = entry
 
                 if reusable:
                     flash('Download code: ' + fileid, 'info')
                 else:
                     flash('1-Time Download code: ' + fileid, 'info')
 
-                dbsave(db)
                 return redirect(url_for('upload'))
 
             except RequestEntityTooLarge:
@@ -195,10 +195,11 @@ def sendfile():
             
 @app.route('/delete/<code>', methods=['GET', 'POST'])
 def delete(code):
-    db = dbload()
-    for file in db['files']:
+    db = l_db['files']
+    udb = l_db['users']
+    for file in db:
         if file.split('_')[-1] == code:
-            if db['files'][file].get('owner') != session.get('username'):
+            if db[file].get('owner') != session.get('username'):
                 flash('You do not own this file and cannot delete it.', 'error')
                 return redirect(url_for('upload'))
             try:
@@ -209,8 +210,7 @@ def delete(code):
                 os.remove('uploads/' + file.split('_')[0])
             except FileNotFoundError:
                 print('couldnt delete from os bc file not found. (2)')
-            db['files'].pop(file)
-            dbsave(db)
+            db.pop(file)
             flash('File with code ' + code + ' has been deleted.', 'info')
             return redirect(url_for('dashboard'))
             
@@ -221,7 +221,8 @@ def download_without_code():
     
 @app.route('/download/<code>', methods=['GET', 'POST'])
 def download(code):
-    db = dbload()
+    db = l_db['files']
+    udb = l_db['users']
     try:
         found = False
         filename = ''
@@ -234,28 +235,26 @@ def download(code):
         if not found:
             print(filename)
             # Search db for the entry with this code and remove it
-            for file_entry in list(db['files'].keys()):
+            for file_entry in list(db.keys()):
                 if file_entry.split('_')[-1] == code:
                     print(f"Deleting: {file_entry}")
                     print
-                    db['files'].pop(file_entry)
-                    dbsave(db)
-                    print(f"Deleted! DB now has {len(db['files'])} files")
+                    db.pop(file_entry)
+                    print(f"Deleted! DB now has {len(db)} files")
                     break
             flash('Invalid code! Check if you typed the correct code, and for one-time codes, make sure nobody else entered the code before you did.', 'error')
             return redirect(url_for('upload'))
         else:
             os.rename('uploads/' + filename, 'uploads/' + filename.replace(f'_{code}', ''))
             def deleteFile():
-                db['files'].pop(filename)
-                dbsave(db)
+                db.pop(filename)
             def backRename():
                 time.sleep(1)
                 os.rename('uploads/' + filename.replace(f'_{code}', ''), 'uploads/' + filename)
-            if db['files'][filename]['reusable']:
+            if db[filename]['reusable']:
                 backToNameFunc = threading.Thread(target=backRename)
                 backToNameFunc.start()
-            if db['files'][filename]['reusable'] == False:
+            if db[filename]['reusable'] == False:
                 deleteFunc = threading.Thread(target=deleteFile)
                 deleteFunc.start()
 
