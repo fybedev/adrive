@@ -1,0 +1,24 @@
+stages:
+  - test
+
+flask_tests:
+  stage: test
+  before_script:
+    - python3 -m venv venv
+    - source venv/bin/activate
+    - pip install --upgrade pip
+    - pip install flask pytest pytest-flask
+    - if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+    - mkdir -p lightdb/databases
+    - touch lightdb/databases/db.sqlite
+  script:
+    - source venv/bin/activate
+    - export PYTHONPATH=$PYTHONPATH:.
+
+    - echo "Starting live server test..."
+    - python3 app.py & 
+    - SLEEP_PID=$!
+    - sleep 5 # Give Flask a second to boot
+    - curl -f http://127.0.0.1:3133/ || (kill $SLEEP_PID && exit 1)
+    - kill $SLEEP_PID
+    - echo "Server responded successfully!"
