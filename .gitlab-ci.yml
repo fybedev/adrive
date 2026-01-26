@@ -20,6 +20,6 @@ flask_tests:
     - python3 app.py & 
     - SLEEP_PID=$!
     - sleep 5 # Give Flask a second to boot
-    - curl -f http://127.0.0.1:5022/upload/ || (kill $SLEEP_PID && exit 1)
+    - curl -f http://127.0.0.1:5022/upload || (kill $SLEEP_PID && exit 1)
     - kill $SLEEP_PID
     - echo "Server responded successfully!"
