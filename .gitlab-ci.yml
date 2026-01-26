@@ -1,0 +1,37 @@
+stages:
+  - test
+  - build
+
+flask_tests:
+  stage: test
+  before_script:
+    - python3 -m venv venv
+    - source venv/bin/activate
+    - pip install --upgrade pip
+    - pip install flask
+    - fuser -k 3133/tcp || echo "Port 3133 was already free."
+    - if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+    - mkdir -p lightdb/databases
+    - touch lightdb/databases/db.sqlite
+  script:
+    - source venv/bin/activate
+    - export PYTHONPATH=$PYTHONPATH:.
+    - export ADRIVE_PORT=5022
+    - echo "Starting live server test..."
+    - python3 app.py & 
+    - SLEEP_PID=$!
+    - sleep 5 # Give Flask a second to boot
+    - curl -f http://127.0.0.1:5022/upload || (kill $SLEEP_PID && exit 1)
+    - kill $SLEEP_PID
+    - echo "Server responded successfully!"
+
+deploy_registry:
+  stage: build
+  script:
+    - echo "$CI_REGISTRY_PASSWORD" | docker login $CI_REGISTRY -u $CI_REGISTRY_USER --password-stdin
+    - docker build -t $CI_REGISTRY_IMAGE:latest -t $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA .
+    - docker push $CI_REGISTRY_IMAGE:latest
+    - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
+    - docker rmi $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
+  only:
+    - main

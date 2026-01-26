@@ -9,5 +9,3 @@ uploads/*
 update_db.py
 .idea/
 *.log
-cli/
-lightdb/
