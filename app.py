@@ -268,4 +268,5 @@ def download(code):
         flash('Invalid code! Check if you typed the correct code, and for one-time codes, make sure nobody else entered the code before you did.', 'error')
         return redirect(url_for('upload'))
 
-app.run(debug=True, port=3133, host='0.0.0.0')
+port = int(os.environ.get("ADRIVE_PORT", 3133))
+app.run(debug=True, port=port, host='0.0.0.0')
