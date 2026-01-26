@@ -7,7 +7,8 @@ flask_tests:
     - python3 -m venv venv
     - source venv/bin/activate
     - pip install --upgrade pip
-    - pip install flask pytest pytest-flask
+    - pip install flask
+    - fuser -k 3133/tcp || echo "Port 3133 was already free."
     - if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
     - mkdir -p lightdb/databases
     - touch lightdb/databases/db.sqlite
