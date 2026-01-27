@@ -9,3 +9,6 @@ uploads/*
 update_db.py
 .idea/
 *.log
+*.sqlite
+*.db
+*.sqlite3
