@@ -71,6 +71,8 @@ def dashboard():
         if db[file].get('owner') == username:
             db[file]['file'] = file
             db[file]['code'] = file.split('_')[-1]
+            # Use original_filename for display if available
+            db[file]['display_name'] = db[file].get('original_filename', file)
             userfiles.append(db[file])
             
     for userfile in userfiles:
@@ -138,10 +140,13 @@ def sendfile():
 
         if file:
             try:
+                original_filename = file.filename
                 extension = os.path.splitext(file.filename)[1].lower()
 
                 fileid = str(random.randint(100000, 99999999))
-                dest_name = secure_filename(file.filename) + f'_{fileid}'
+                # Use secure_filename for the disk storage but keep original filename in DB
+                safe_filename = secure_filename(original_filename) or 'file'
+                dest_name = safe_filename + f'_{fileid}'
                 dest_path = os.path.join(app.config['UPLOAD_DIRECTORY'], dest_name)
 
                 file.save(dest_path)
@@ -177,7 +182,11 @@ def sendfile():
                 else:
                     remaining_gb = 0.0
 
-                entry = {"reusable": True if reusable else False, "size_megabytes": size_megabytes}
+                entry = {
+                    "reusable": True if reusable else False, 
+                    "size_megabytes": size_megabytes,
+                    "original_filename": original_filename
+                }
                 if loggedIn and username and file_gb <= remaining_gb:
                     entry["owner"] = username
 
@@ -245,6 +254,9 @@ def download(code):
             flash('Invalid code! Check if you typed the correct code, and for one-time codes, make sure nobody else entered the code before you did.', 'error')
             return redirect(url_for('upload'))
         else:
+            # Get original filename from database if it exists
+            original_filename = db[filename].get('original_filename', filename.replace(f'_{code}', ''))
+            
             os.rename('uploads/' + filename, 'uploads/' + filename.replace(f'_{code}', ''))
             def deleteFile():
                 db.pop(filename)
@@ -258,7 +270,7 @@ def download(code):
                 deleteFunc = threading.Thread(target=deleteFile)
                 deleteFunc.start()
 
-            return send_from_directory(app.config['UPLOAD_DIRECTORY'], filename.replace(f'_{code}', ''), as_attachment=True)
+            return send_from_directory(app.config['UPLOAD_DIRECTORY'], filename.replace(f'_{code}', ''), as_attachment=True, download_name=original_filename)
                 
     except Exception as e:
         print(f"Error in download: {e}")

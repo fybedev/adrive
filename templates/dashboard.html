@@ -95,7 +95,7 @@
                 </tr>
                 {% for file in files %}
                 <tr>
-                    <td>{{ file.file.rsplit('_', 1)[0] }}</td>
+                    <td>{{ file.display_name }}</td>
                     <td>{{ file.code }}</td>
                     <td>{{ 'Yes' if file.reusable else 'No' }}</td>
                     <td>
