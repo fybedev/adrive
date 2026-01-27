@@ -13,6 +13,7 @@ flask_tests:
     - if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
     - mkdir -p lightdb/databases
     - touch lightdb/databases/db.sqlite
+    - python update_database.py
   script:
     - source venv/bin/activate
     - export PYTHONPATH=$PYTHONPATH:.
