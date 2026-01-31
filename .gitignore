@@ -12,3 +12,4 @@ update_db.py
 *.sqlite
 *.db
 *.sqlite3
+__MACOSX/
