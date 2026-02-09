@@ -2,3 +2,4 @@ Flask
 requests
 werkzeug
 pyyaml
+bcrypt
