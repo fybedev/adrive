@@ -9,7 +9,6 @@ from flask import (
     jsonify
 )
 
-# TODO move to lightdb instead of json dbload and dbsave
 from tools.utils import redirect
 from lightdb import LightDB
 from tools.geo_loc import geo_loc_bp
@@ -25,9 +24,6 @@ import random
 import threading
 import time
 
-# import logging
-# import logging.handlers
-
 l_db = LightDB()
 
 app = Flask('adrive', static_folder='static', template_folder='templates')
@@ -37,12 +33,6 @@ app.config['SECRET_KEY'] = str(random.randint(99999, 9999999))
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1)
 app.register_blueprint(geo_loc_bp)
 app.register_blueprint(auth_bp)
-
-# handler = logging.handlers.RotatingFileHandler('logs', maxBytes=1024 * 1024)
-# logging.getLogger('werkzeug').setLevel(logging.DEBUG)
-# logging.getLogger('werkzeug').addHandler(handler)
-# app.logger.setLevel(logging.WARNING)
-# app.logger.addHandler(handler)
 
 @app.route('/')
 def index():
@@ -71,7 +61,6 @@ def dashboard():
         if db[file].get('owner') == username:
             db[file]['file'] = file
             db[file]['code'] = file.split('_')[-1]
-            # Use original_filename for display if available
             db[file]['display_name'] = db[file].get('original_filename', file)
             userfiles.append(db[file])
             
