@@ -85,6 +85,7 @@
                 <button type="button" value="Download" class="btn btn-primary"
                     onclick="downloadClick()">다운로드</button>
             </form>
+            <a href="/" onclick="localStorage.removeItem('lang')" class="sign-in-button" style="text-decoration: none; background: rgb(79, 92, 178)">언어 번경</a>
             {% if not loggedIn %}
             <a href="/login" class="sign-in-button" style="text-decoration: none; background: rgb(0, 81, 139)">로그인</a>
             <a href="/register" class="sign-in-button"
@@ -94,7 +95,6 @@
             <a href="/dashboard" class="sign-in-button" style="text-decoration: none; background: blue">관리센터</a>
             <a href="/logout" class="sign-in-button" style="text-decoration: none; background: rgb(79, 92, 178)">로그아웃</a>
             {% endif %}
-
             <!-- Release Notes Section -->
             <div class="release-notes" style="margin-top: 30px; padding: 20px; background: var(--card-bg, #f8f9fa); border-radius: 8px; border: 1px solid var(--border-color, #dee2e6);">
                 <h3 style="margin-bottom: 15px; font-size: 18px;">

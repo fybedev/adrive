@@ -86,6 +86,7 @@
                 <button type="button" value="Download" class="btn btn-primary"
                     onclick="downloadClick()">Download</button>
             </form>
+            <a href="/" onclick="localStorage.removeItem('lang')" class="sign-in-button" style="text-decoration: none; background: rgb(79, 92, 178)">Change Language</a>
             {% if not loggedIn %}
             <a href="/login" class="sign-in-button" style="text-decoration: none; background: rgb(0, 81, 139)">Sign
                 In</a>
