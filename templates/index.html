@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ADrive Share</title>
+    <script src="https://kit.fontawesome.com/972393379b.js" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body>
+    <button class="theme-toggle" id="themeToggle" title="Toggle dark mode">
+        <i class="fas fa-moon"></i>
+    </button>
+    <div class="app">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <ul class="flashes">
+            {% for category, message in messages %}
+            <!-- category: message, error, info, warning -->
+            {% if category == 'message' %}
+            {% set category = 'primary' %}
+            {% endif %}
+            {% if category == 'error' %}
+            {% set category = 'danger' %}
+            {% endif %}
+            {% if category == 'info' %}
+            {% set category = 'info' %}
+            {% endif %}
+            {% if category == 'warning' %}
+            {% set category = 'warning' %}
+            {% endif %}
+            <li class="alert alert-{{ category }}">{{ message }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+        {% endwith %}
+
+        <div class="form-section">
+            <h1>Language Selection 언어 선택</h1>
+            <a href="/upload" class="sign-in-button" onclick="localStorage.setItem('lang', 'en');" style="text-decoration: none; background: rgb(32, 0, 139)">English</a>
+            <a href="/upload_kr" class="sign-in-button"
+                style="text-decoration: none; background: rgb(1, 60, 155)">한국어</a>
+
+        </div>
+
+
+    </div>
+
+    <script>
+        //document.getElementById("uploadBtn").addEventListener("click", uploadAnim);
+
+        function downloadClick() {
+            const codeEl = document.getElementById("codeInput");
+            const code = codeEl.value;
+            // clear input when clicked
+            codeEl.value = '';
+            const url = `/download/` + code;
+            location.href = url;
+        }
+        function uploadAnim(e) {
+            //if (document.getElementById("fileUpload").value == "") {
+            //    document.getElementById("uploadBtn").classList.add("redBtn");
+            //    document.getElementById("uploadBtn").value = "! ! !";
+            //    e.preventDefault();
+            //} else {
+            //    document.getElementById("uploadBtn").classList.add("yellowBtn");
+            //    document.getElementById("uploadBtn").value = "· · ·";
+            //}
+            if (!document.getElementById("fileUpload").value == "") {
+                document.getElementById("uploadBtn").classList.add("yellowBtn");
+                document.getElementById("uploadBtn").value = "· · ·";
+            }
+        }
+    </script>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
+        crossorigin="anonymous"></script>
+</body>
+
+</html>

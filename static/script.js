@@ -151,3 +151,19 @@ document.addEventListener('DOMContentLoaded', function() {
         xhr.send(formData);
     });
 });
+
+if (localStorage.getItem("lang") == "en") {
+    if (!window.location.href.contains("/upload")) {
+        window.location.href = "/upload";
+    }
+}
+if (localStorage.getItem("lang") == "kr") {
+    if (!window.location.href.contains("/upload_kr")) {
+        window.location.href = "/upload_kr";
+    }
+}
+if (localStorage.getItem("lang") == "en") {
+    if (!window.location.href.contains("/upload_kr")) {
+        window.location.href = "/upload_kr";
+    }
+}

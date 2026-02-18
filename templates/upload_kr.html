@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>파일 공유</title>
+    <script src="https://kit.fontawesome.com/972393379b.js" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body>
+    <button class="theme-toggle" id="themeToggle" title="Toggle dark mode">
+        <i class="fas fa-moon"></i>
+    </button>
+    <div class="app">
+        
+        <div class="form-section">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <ul class="flashes">
+            {% for category, message in messages %}
+            <!-- category: message, error, info, warning -->
+            {% if category == 'message' %}
+            {% set category = 'primary' %}
+            {% endif %}
+            {% if category == 'error' %}
+            {% set category = 'danger' %}
+            {% endif %}
+            {% if category == 'info' %}
+            {% set category = 'info' %}
+            {% endif %}
+            {% if category == 'warning' %}
+            {% set category = 'warning' %}
+            {% endif %}
+            <li class="alert alert-{{ category }}">{{ message }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+        {% endwith %}
+            <form id="uploadForm" action="/sendfile" method="post" enctype="multipart/form-data">
+                {% if loggedIn %}
+                <h1>파일 공유 <span class="badge text-bg-primary">{{ username }}</span></h1>
+                {% else %}
+                <h1>파일 공유 <span class="badge text-bg-danger">비로그인</span></h1>
+                {% endif %}
+                <!-- <span style="font-size: 20px;">
+                    <i class="fa-solid fa-wifi fa-xs"
+                        style="line-height: 25px; font-size: 15px; display: inline-block;"></i>
+                    <span id="mirrorText">Ping: <span id="ping-value">CONNECTING</span>ms</span> <i
+                        class="fa-solid fa-circle-dot fa-beat-fade fa-2xs" style="color: #ff9500;" id="mirrorLogo"></i>
+                </span> -->
+                <span style="font-size: 20px; padding-bottom: 7px;">
+                    <i class="fa-solid fa-location fa-xs"
+                        style="line-height: 25px; font-size: 15px; display: inline-block;"></i>
+                    <span id="location-display" class="loading">위치 조회중...</span> <i
+                        class="fa-solid fa-circle-dot fa-2xs" id="mirrorLogo" style="color: #c10101;"></i> <span
+                        class="badge text-bg-primary" id="ping-badge"><span id="ping-status"></span> <span
+                            id="ping-value">..</span>ms</span></span>
+                </span>
+                <input type="file" name="file" id="fileUpload" class="form-control" required aria-required>
+                <input type="hidden" id="quotaGB" value="{{ quota_gb }}">
+                <input type="hidden" id="quotaUsedGB" value="{{ quota_usage }}">
+                <div class="progress" id="uploadProgressContainer" style="display:none;width:100%;margin-top:8px">
+                    <div id="uploadProgress" class="progress-bar bg-success" role="progressbar" style="width:0%"
+                        aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+                </div>
+                <div id="uploadProgressText" style="display:none;font-size:13px;margin-top:4px">0%</div>
+                <div class="input-group mb-3">
+                    <div class="input-group-text">
+                        <input class="form-check-input mt-0" type="checkbox" value="" id="reusableCheck" name="reusable"
+                            aria-label="Checkbox for following text input"
+                            style="border: 1px solid rgb(106, 106, 106);">
+                        <label for="reusable" style="margin-left: 6px; margin-bottom: 0;">재사용 가능 링크</label>
+                    </div>
+                </div>
+                <input type="submit" class="" value="파일 업로드" id="uploadBtn" onclick="uploadAnim()"
+                    style="transition-duration: 400ms;">
+            </form>
+
+            <form>
+                <input type="text" class="form-control" id="codeInput" placeholder="전달받은 코드">
+                <button type="button" value="Download" class="btn btn-primary"
+                    onclick="downloadClick()">다운로드</button>
+            </form>
+            {% if not loggedIn %}
+            <a href="/login" class="sign-in-button" style="text-decoration: none; background: rgb(0, 81, 139)">로그인</a>
+            <a href="/register" class="sign-in-button"
+                style="text-decoration: none; background: rgb(32, 0, 139)">회원 가입</a><br><br>
+            <p style="color: gray; font-size: 11px; text-align: center;">회원 가입이 필요하지 않은 서비스입니다.</p>
+            {% else %}
+            <a href="/dashboard" class="sign-in-button" style="text-decoration: none; background: blue">관리센터</a>
+            <a href="/logout" class="sign-in-button" style="text-decoration: none; background: rgb(79, 92, 178)">로그아웃</a>
+            {% endif %}
+
+            <!-- Release Notes Section -->
+            <div class="release-notes" style="margin-top: 30px; padding: 20px; background: var(--card-bg, #f8f9fa); border-radius: 8px; border: 1px solid var(--border-color, #dee2e6);">
+                <h3 style="margin-bottom: 15px; font-size: 18px;">
+                    <i class="fa-solid fa-newspaper"></i> 바뀐 점
+                </h3>
+                <div class="release-item" style="margin-bottom: 15px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                        <strong style="font-size: 16px;">Version 0.3.0</strong>
+                        <span class="badge text-bg-info">Latest</span>
+                    </div>
+                    <small style="color: #6c757d; display: block; margin-bottom: 8px;">January 25, 2026</small>
+                    <ul style="margin: 0; padding-left: 20px; font-size: 14px;">
+                        <li>Migrated to LightDB from JSON storage</li>
+                        <li>Improved performance and reliability</li>
+                        <li>Added real-time ping monitoring</li>
+                        <li>Enhanced geolocation detection</li>
+                    </ul>
+                </div>
+                <div class="release-item" style="margin-bottom: 0;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                        <strong style="font-size: 16px;">Version 1.5.0</strong>
+                    </div>
+                    <small style="color: #6c757d; display: block; margin-bottom: 8px;">December 2025</small>
+                    <ul style="margin: 0; padding-left: 20px; font-size: 14px;">
+                        <li>Added user dashboard</li>
+                        <li>Enhanced safety in dashboard management</li>
+                    </ul>
+                </div>
+            </div>
+
+        </div>
+
+
+    </div>
+
+    <script>
+        //document.getElementById("uploadBtn").addEventListener("click", uploadAnim);
+
+        function downloadClick() {
+            const codeEl = document.getElementById("codeInput");
+            const code = codeEl.value;
+            // clear input when clicked
+            codeEl.value = '';
+            const url = `/download/` + code;
+            location.href = url;
+        }
+        function uploadAnim(e) {
+            //if (document.getElementById("fileUpload").value == "") {
+            //    document.getElementById("uploadBtn").classList.add("redBtn");
+            //    document.getElementById("uploadBtn").value = "! ! !";
+            //    e.preventDefault();
+            //} else {
+            //    document.getElementById("uploadBtn").classList.add("yellowBtn");
+            //    document.getElementById("uploadBtn").value = "· · ·";
+            //}
+            if (!document.getElementById("fileUpload").value == "") {
+                document.getElementById("uploadBtn").classList.add("yellowBtn");
+                document.getElementById("uploadBtn").value = "· · ·";
+            }
+        }
+    </script>
+
+    <script>
+        // Client-side quota check before uploading large files
+        (function () {
+            const fileInput = document.getElementById('fileUpload');
+            const uploadBtn = document.getElementById('uploadBtn');
+            const quotaGB = parseFloat(document.getElementById('quotaGB').value) || 0;
+            const usedGB = parseFloat(document.getElementById('quotaUsedGB').value) || 0;
+            const remainingGB = Math.max(0, quotaGB - usedGB);
+
+            function ensureFlashesContainer() {
+                let flashes = document.querySelector('.flashes');
+                if (!flashes) {
+                    flashes = document.createElement('ul');
+                    flashes.className = 'flashes';
+                    const app = document.querySelector('.app');
+                    if (app) app.insertBefore(flashes, app.firstChild);
+                }
+                return flashes;
+            }
+
+            function clearClientFlash() {
+                const flashes = document.querySelectorAll('.flashes li.client-quota-warning');
+                flashes.forEach(n => n.remove());
+            }
+
+            function showClientFlash(message) {
+                clearClientFlash();
+                const flashes = ensureFlashesContainer();
+                const li = document.createElement('li');
+                li.className = 'warning client-quota-warning';
+                const strong = document.createElement('strong');
+                strong.textContent = message;
+                li.appendChild(strong);
+                flashes.prepend(li);
+            }
+
+            if (fileInput) {
+                fileInput.addEventListener('change', function (e) {
+                    clearClientFlash();
+                    uploadBtn.disabled = false;
+                    const f = fileInput.files && fileInput.files[0];
+                    if (!f) return;
+                    const fileGB = f.size / (1024 * 1024 * 1024);
+                    if (fileGB > remainingGB) {
+                        showClientFlash('You do not have sufficient quota to manage this file. If you choose to upload this file, you will not be able to manage it through your dashboard.');
+                        // still allow upload; server will accept but will not set owner when quota insufficient
+                    } else {
+                        clearClientFlash();
+                    }
+                });
+            }
+        })();
+    </script>
+
+    <script>
+        function measurePing() {
+            const start = Date.now();
+
+            fetch('/ping')
+                .then(() => {
+                    const end = Date.now();
+                    const latency = end - start;
+                    document.getElementById('ping-value').innerText = latency;
+                    if (latency > 200) {
+                        document.getElementById('ping-status').innerText = "BAD";
+                        document.getElementById('ping-badge').className = "badge text-bg-danger";
+                    } else if (latency > 100) {
+                        document.getElementById('ping-status').innerText = "GOOD";
+                        document.getElementById('ping-badge').className = "badge text-bg-success";
+                    } else if (latency <= 100) {
+                        document.getElementById('ping-status').innerText = "BEST";
+                        document.getElementById('ping-badge').className = "badge text-bg-primary";
+                    }
+                })
+                .catch(err => {
+                    document.getElementById('ping-value').innerText = "Error";
+                });
+        }
+
+        document.getElementById("fileUpload").disabled = true;
+        document.getElementById("uploadBtn").disabled = true;
+        document.getElementById("codeInput").disabled = true;
+        document.getElementById("reusableCheck").disabled = true;
+        // Measure ping immediately on load
+        setTimeout(() => {
+            document.getElementById("mirrorLogo").classList.remove("fa-beat-fade");
+            document.getElementById("mirrorLogo").style.color = "green";
+            measurePing();
+            document.getElementById("fileUpload").disabled = false;
+            document.getElementById("codeInput").disabled = false;
+            document.getElementById("uploadBtn").disabled = false;
+            document.getElementById("reusableCheck").disabled = false;
+
+
+        }, 1000);
+
+
+        setInterval(() => {
+            measurePing();
+        }, 1000); // Update every 30 seconds
+    </script>
+    <script>
+        async function loadLocation() {
+            try {
+                // This calls the API from the USER'S browser.
+                // The API will see the User's Real IP directly.
+                const response = await fetch('https://ipapi.co/json/');
+                const data = await response.json();
+
+                if (data.city && data.country_name) {
+                    document.getElementById('location-display').innerText =
+                        `${data.city}, ${data.country_name}`;
+                    document.getElementById('location-display').classList.remove('loading');
+                } else {
+                    throw new Error("Missing data");
+                }
+            } catch (err) {
+                console.error("Location Error:", err);
+                document.getElementById('location-display').innerText = "Unknown Location";
+            }
+        }
+        loadLocation();
+    </script>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
+        crossorigin="anonymous"></script>
+</body>
+
+</html>
