@@ -9,7 +9,6 @@ from flask import (
     jsonify
 )
 
-# TODO move to lightdb instead of json dbload and dbsave
 from tools.utils import redirect
 from lightdb import LightDB
 from tools.geo_loc import geo_loc_bp
@@ -25,9 +24,6 @@ import random
 import threading
 import time
 
-# import logging
-# import logging.handlers
-
 l_db = LightDB()
 
 app = Flask('adrive', static_folder='static', template_folder='templates')
@@ -38,15 +34,10 @@ app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1)
 app.register_blueprint(geo_loc_bp)
 app.register_blueprint(auth_bp)
 
-# handler = logging.handlers.RotatingFileHandler('logs', maxBytes=1024 * 1024)
-# logging.getLogger('werkzeug').setLevel(logging.DEBUG)
-# logging.getLogger('werkzeug').addHandler(handler)
-# app.logger.setLevel(logging.WARNING)
-# app.logger.addHandler(handler)
-
 @app.route('/')
 def index():
-    return redirect(url_for('upload'))
+    # return redirect(url_for('upload'))
+    return render_template('index.html')
 
 @app.route('/dashboard')
 def dashboard():
@@ -71,7 +62,6 @@ def dashboard():
         if db[file].get('owner') == username:
             db[file]['file'] = file
             db[file]['code'] = file.split('_')[-1]
-            # Use original_filename for display if available
             db[file]['display_name'] = db[file].get('original_filename', file)
             userfiles.append(db[file])
             
@@ -127,6 +117,43 @@ def upload():
         quota_usage_gb = quota_usage_gb or 0.0
 
     return render_template('upload.html', loggedIn=loggedIn, username=username, quota_gb=quota_gb, quota_usage=quota_usage_gb)
+
+@app.route('/upload_kr')
+def upload_kr():
+    db = l_db['files']
+    udb = l_db['users']
+    loggedIn = session.get('loggedIn', False)
+    username = session.get('username', '')
+    quota_gb = None
+    quota_usage_gb = 0.0
+    try:
+        if loggedIn and username:
+            user_rec = None
+            for u in udb:
+                if u.get('username') == username:
+                    user_rec = u
+                    break
+            if user_rec:
+                quota_gb = user_rec.get('quota_gb', 0)
+            else:
+                quota_gb = 0
+            userfiles = []
+            for file in db:
+                if db[file].get('owner') == username:
+                    userfiles.append(db[file])
+            for userfile in userfiles:
+                usf_mb = userfile.get('size_megabytes', 0)
+                if usf_mb:
+                    quota_usage_gb += usf_mb / 1024
+            quota_usage_gb = round(quota_usage_gb, 1)
+        else:
+            quota_gb = 5.0
+            quota_usage_gb = 0.0
+    except Exception:
+        quota_gb = quota_gb or 0
+        quota_usage_gb = quota_usage_gb or 0.0
+
+    return render_template('upload_kr.html', loggedIn=loggedIn, username=username, quota_gb=quota_gb, quota_usage=quota_usage_gb)
 
 @app.route('/sendfile', methods=['POST'])
 def sendfile():

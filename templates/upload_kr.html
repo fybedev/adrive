@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ADrive Share</title>
+    <title>파일 공유</title>
     <script src="https://kit.fontawesome.com/972393379b.js" crossorigin="anonymous"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -42,9 +42,9 @@
         {% endwith %}
             <form id="uploadForm" action="/sendfile" method="post" enctype="multipart/form-data">
                 {% if loggedIn %}
-                <h1>ADrive File Sharing <span class="badge text-bg-primary">{{ username }}</span></h1>
+                <h1>파일 공유 <span class="badge text-bg-primary">{{ username }}</span></h1>
                 {% else %}
-                <h1>ADrive File Sharing <span class="badge text-bg-danger">Guest</span></h1>
+                <h1>파일 공유 <span class="badge text-bg-danger">비로그인</span></h1>
                 {% endif %}
                 <!-- <span style="font-size: 20px;">
                     <i class="fa-solid fa-wifi fa-xs"
@@ -55,7 +55,7 @@
                 <span style="font-size: 20px; padding-bottom: 7px;">
                     <i class="fa-solid fa-location fa-xs"
                         style="line-height: 25px; font-size: 15px; display: inline-block;"></i>
-                    <span id="location-display" class="loading">Locating...</span> <i
+                    <span id="location-display" class="loading">위치 조회중...</span> <i
                         class="fa-solid fa-circle-dot fa-2xs" id="mirrorLogo" style="color: #c10101;"></i> <span
                         class="badge text-bg-primary" id="ping-badge"><span id="ping-status"></span> <span
                             id="ping-value">..</span>ms</span></span>
@@ -73,59 +73,52 @@
                         <input class="form-check-input mt-0" type="checkbox" value="" id="reusableCheck" name="reusable"
                             aria-label="Checkbox for following text input"
                             style="border: 1px solid rgb(106, 106, 106);">
-                        <label for="reusable" style="margin-left: 6px; margin-bottom: 0;">Reusable
-                            Link</label>
+                        <label for="reusable" style="margin-left: 6px; margin-bottom: 0;">재사용 가능 링크</label>
                     </div>
                 </div>
-                <input type="submit" class="" value="Upload" id="uploadBtn" onclick="uploadAnim()"
+                <input type="submit" class="" value="파일 업로드" id="uploadBtn" onclick="uploadAnim()"
                     style="transition-duration: 400ms;">
             </form>
 
             <form>
-                <input type="text" class="form-control" id="codeInput">
+                <input type="text" class="form-control" id="codeInput" placeholder="전달받은 코드">
                 <button type="button" value="Download" class="btn btn-primary"
-                    onclick="downloadClick()">Download</button>
+                    onclick="downloadClick()">다운로드</button>
             </form>
-            <a href="/" onclick="localStorage.removeItem('lang')" class="sign-in-button" style="text-decoration: none; background: rgb(79, 92, 178)">Change Language</a>
+            <a href="/" onclick="localStorage.removeItem('lang')" class="sign-in-button" style="text-decoration: none; background: rgb(79, 92, 178)">언어 번경</a>
             {% if not loggedIn %}
-            <a href="/login" class="sign-in-button" style="text-decoration: none; background: rgb(0, 81, 139)">Sign
-                In</a>
+            <a href="/login" class="sign-in-button" style="text-decoration: none; background: rgb(0, 81, 139)">로그인</a>
             <a href="/register" class="sign-in-button"
-                style="text-decoration: none; background: rgb(32, 0, 139)">Register</a><br><br>
-            <p style="color: gray; font-size: 11px; text-align: center;">Signing in is not required. You can at any time
-                register and sign in to manage your existing codes for free. You can manage up to 3GB of files.</p>
+                style="text-decoration: none; background: rgb(32, 0, 139)">회원 가입</a><br><br>
+            <p style="color: gray; font-size: 11px; text-align: center;">회원 가입이 필요하지 않은 서비스입니다.</p>
             {% else %}
-            <a href="/dashboard" class="sign-in-button" style="text-decoration: none; background: blue">View
-                Dashboard</a>
-            <a href="/logout" class="sign-in-button" style="text-decoration: none; background: rgb(79, 92, 178)">Sign
-                Out</a>
+            <a href="/dashboard" class="sign-in-button" style="text-decoration: none; background: blue">관리센터</a>
+            <a href="/logout" class="sign-in-button" style="text-decoration: none; background: rgb(79, 92, 178)">로그아웃</a>
             {% endif %}
-
             <!-- Release Notes Section -->
             <div class="release-notes" style="margin-top: 30px; padding: 20px; background: var(--card-bg, #f8f9fa); border-radius: 8px; border: 1px solid var(--border-color, #dee2e6);">
                 <h3 style="margin-bottom: 15px; font-size: 18px;">
-                    <i class="fa-solid fa-newspaper"></i> Release Notes
+                    <i class="fa-solid fa-newspaper"></i> 바뀐 점
                 </h3>
                 <div class="release-item" style="margin-bottom: 15px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
-                        <strong style="font-size: 16px;">Version 0.3.1</strong>
-                        <span class="badge text-bg-info">Latest</span>
+                        <strong style="font-size: 16px;">버전 0.3.1</strong>
+                        <span class="badge text-bg-info">최신</span>
                     </div>
-                    <small style="color: #6c757d; display: block; margin-bottom: 8px;">February 2, 2026</small>
+                    <small style="color: #6c757d; display: block; margin-bottom: 8px;">2월 2일, 2026년</small>
                     <ul style="margin: 0; padding-left: 20px; font-size: 14px;">
-                        <li>Enhanced security with password hashing</li>
+                        <li>비밀번호 암호화로 강화된 보안</li>
                     </ul>
                 </div>
                 <div class="release-item" style="margin-bottom: 0;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
-                        <strong style="font-size: 16px;">Version 0.3.0</strong>
+                        <strong style="font-size: 16px;">버전 0.3.0</strong>
                     </div>
-                    <small style="color: #6c757d; display: block; margin-bottom: 8px;">January 25, 2026</small>
+                    <small style="color: #6c757d; display: block; margin-bottom: 8px;">1월 25일, 2025년</small>
                     <ul style="margin: 0; padding-left: 20px; font-size: 14px;">
-                        <li>Migrated to LightDB from JSON storage</li>
-                        <li>Improved performance and reliability</li>
-                        <li>Added real-time ping monitoring</li>
-                        <li>Enhanced geolocation detection</li>
+                        <li>개선된 정보 저장 서비스</li>
+                        <li>개선된 위치 정보 서비스</li>
+                        <li>실시간 네트워크 연결 상태 표시</li>
                     </ul>
                 </div>
             </div>
