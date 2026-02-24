@@ -19,6 +19,21 @@ def _check_password(password: str, hashed_password: str) -> bool:
 def register_user(username: str, password: str, quota_gb: int = 5, is_admin: bool = False) -> None:
     global l_db
 
+    if 'users' not in l_db:
+        l_db['users'] = []
+    if 'files' not in l_db:
+        l_db['files'] = {}
+
+    users = l_db['users']
+    for i, user in enumerate(users):
+        if user.get('username') == username:
+            updated = dict(user)
+            updated['password'] = _hash_password(password)
+            updated['quota_gb'] = quota_gb
+            updated['is_admin'] = is_admin
+            users[i] = updated
+            return
+
     user = {
         'username': username,
         'password': _hash_password(password),
@@ -29,6 +44,8 @@ def register_user(username: str, password: str, quota_gb: int = 5, is_admin: boo
 
 def check_if_user_exists(username: str) -> bool:
     global l_db
+    if 'users' not in l_db:
+        return False
     for user in l_db['users']:
         if user.get('username') == username:
             return True
@@ -40,6 +57,8 @@ def list_users() -> list:
 
 def is_admin_user(username: str) -> bool:
     global l_db
+    if 'users' not in l_db:
+        return False
     for user in l_db['users']:
         if user.get('username') == username:
             return bool(user.get('is_admin', False))
@@ -47,6 +66,8 @@ def is_admin_user(username: str) -> bool:
 
 def check_if_auth(username: str, password: str) -> bool:
     global l_db
+    if 'users' not in l_db:
+        return False
     for user in l_db['users']:
         if user.get('username') != username:
             continue

@@ -1,5 +1,3 @@
-from lightdb import LightDB
+from tools.db_auth import register_user
 
-l_db = LightDB()
-l_db['users'] = []
-l_db['files'] = {}
+register_user('admin', 'admin', quota_gb=10, is_admin=True)
