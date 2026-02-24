@@ -113,6 +113,10 @@
             </table>
             <a href="/upload" class="sign-in-button" style="text-decoration: none; background: rgb(1, 60, 155)">Upload a
                 New File</a>
+            {% if is_admin %}
+            <a href="/admin" class="sign-in-button" style="text-decoration: none; background: rgb(139, 0, 0)">
+                <i class="fas fa-shield-alt"></i> Admin Panel</a>
+            {% endif %}
             <a href="/logout" class="sign-in-button" style="text-decoration: none; background: rgb(32, 0, 139)">Sign
                 Out</a>
 

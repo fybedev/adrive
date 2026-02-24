@@ -13,6 +13,7 @@ from tools.utils import redirect
 from lightdb import LightDB
 from tools.geo_loc import geo_loc_bp
 from tools.auth import auth_bp
+from tools.db_auth import is_admin_user
 
 from werkzeug.exceptions import RequestEntityTooLarge
 from werkzeug.utils import secure_filename
@@ -78,7 +79,8 @@ def dashboard():
         files=userfiles,
         username=username,
         quota_gb=udb[[user['username'] for user in udb].index(username)]['quota_gb'],
-        quota_usage=quota_usage_gb
+        quota_usage=quota_usage_gb,
+        is_admin=is_admin_user(username)
     )
 
 @app.route('/upload')
@@ -306,6 +308,142 @@ def download(code):
         traceback.print_exc()
         flash('Invalid code! Check if you typed the correct code, and for one-time codes, make sure nobody else entered the code before you did.', 'error')
         return redirect(url_for('upload'))
+
+@app.route('/admin')
+def admin():
+    if not session.get('loggedIn', False):
+        flash('You must be signed in to access the admin panel!', 'error')
+        return redirect(url_for('upload'))
+
+    username = session.get('username')
+    if not is_admin_user(username):
+        flash('Access denied. Admin privileges required.', 'error')
+        return redirect(url_for('upload'))
+
+    db = l_db['files']
+    udb = l_db['users']
+
+    # Calculate per-user storage usage
+    user_usage = {}
+    user_file_count = {}
+    total_storage_mb = 0.0
+
+    for file_key in db:
+        owner = db[file_key].get('owner')
+        size_mb = db[file_key].get('size_megabytes', 0) or 0
+        total_storage_mb += size_mb
+        if owner:
+            user_usage[owner] = user_usage.get(owner, 0) + size_mb
+            user_file_count[owner] = user_file_count.get(owner, 0) + 1
+
+    total_storage_gb = round(total_storage_mb / 1024, 2)
+    total_files = len(db)
+
+    users_data = []
+    for user in udb:
+        uname = user.get('username', '')
+        usage_mb = user_usage.get(uname, 0)
+        usage_gb = round(usage_mb / 1024, 2)
+        users_data.append({
+            'username': uname,
+            'quota_gb': user.get('quota_gb', 0),
+            'usage_gb': usage_gb,
+            'file_count': user_file_count.get(uname, 0),
+            'is_admin': user.get('is_admin', False)
+        })
+
+    return render_template(
+        'admin.html',
+        username=username,
+        users=users_data,
+        total_storage_gb=total_storage_gb,
+        total_files=total_files,
+        total_users=len(users_data)
+    )
+
+
+@app.route('/admin/update_quota', methods=['POST'])
+def admin_update_quota():
+    if not session.get('loggedIn', False) or not is_admin_user(session.get('username')):
+        flash('Access denied.', 'error')
+        return redirect(url_for('upload'))
+
+    target = request.form.get('username')
+    try:
+        new_quota = float(request.form.get('quota_gb', 0))
+    except (ValueError, TypeError):
+        flash('Invalid quota value.', 'error')
+        return redirect(url_for('admin'))
+
+    udb = l_db['users']
+    users = list(udb)
+    for i, user in enumerate(users):
+        if user.get('username') == target:
+            users[i]['quota_gb'] = new_quota
+            l_db['users'] = users
+            flash(f"Quota for {target} updated to {new_quota}GB.", 'info')
+            return redirect(url_for('admin'))
+
+    flash('User not found.', 'error')
+    return redirect(url_for('admin'))
+
+
+@app.route('/admin/delete_user', methods=['POST'])
+def admin_delete_user():
+    if not session.get('loggedIn', False) or not is_admin_user(session.get('username')):
+        flash('Access denied.', 'error')
+        return redirect(url_for('upload'))
+
+    target = request.form.get('username')
+    if target == session.get('username'):
+        flash('You cannot delete your own account.', 'error')
+        return redirect(url_for('admin'))
+
+    udb = l_db['users']
+    users = list(udb)
+    new_users = [u for u in users if u.get('username') != target]
+    if len(new_users) == len(users):
+        flash('User not found.', 'error')
+        return redirect(url_for('admin'))
+
+    l_db['users'] = new_users
+    # Remove files owned by the deleted user
+    db = l_db['files']
+    files_to_delete = [fkey for fkey in db if db[fkey].get('owner') == target]
+    for fkey in files_to_delete:
+        try:
+            os.remove(os.path.join(app.config['UPLOAD_DIRECTORY'], fkey))
+        except FileNotFoundError:
+            pass
+        db.pop(fkey)
+    flash(f"User {target} has been deleted.", 'info')
+    return redirect(url_for('admin'))
+
+
+@app.route('/admin/toggle_admin', methods=['POST'])
+def admin_toggle_admin():
+    if not session.get('loggedIn', False) or not is_admin_user(session.get('username')):
+        flash('Access denied.', 'error')
+        return redirect(url_for('upload'))
+
+    target = request.form.get('username')
+    if target == session.get('username'):
+        flash('You cannot change your own admin status.', 'error')
+        return redirect(url_for('admin'))
+
+    udb = l_db['users']
+    users = list(udb)
+    for i, user in enumerate(users):
+        if user.get('username') == target:
+            users[i]['is_admin'] = not bool(user.get('is_admin', False))
+            l_db['users'] = users
+            status = 'granted' if users[i]['is_admin'] else 'revoked'
+            flash(f"Admin privileges {status} for {target}.", 'info')
+            return redirect(url_for('admin'))
+
+    flash('User not found.', 'error')
+    return redirect(url_for('admin'))
+
 
 port = int(os.environ.get("ADRIVE_PORT", 3133))
 app.run(debug=True, port=port, host='0.0.0.0')

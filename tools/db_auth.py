@@ -16,13 +16,14 @@ def _check_password(password: str, hashed_password: str) -> bool:
     return bcrypt.checkpw(password.encode('utf-8'), hashed_password.encode('utf-8'))
 
 
-def register_user(username: str, password: str, quota_gb: int = 5) -> None:
+def register_user(username: str, password: str, quota_gb: int = 5, is_admin: bool = False) -> None:
     global l_db
 
     user = {
         'username': username,
         'password': _hash_password(password),
-        'quota_gb': quota_gb
+        'quota_gb': quota_gb,
+        'is_admin': is_admin
     }
     l_db['users'].append(user)
 
@@ -36,6 +37,13 @@ def check_if_user_exists(username: str) -> bool:
 def list_users() -> list:
     global l_db
     return l_db['users']
+
+def is_admin_user(username: str) -> bool:
+    global l_db
+    for user in l_db['users']:
+        if user.get('username') == username:
+            return bool(user.get('is_admin', False))
+    return False
 
 def check_if_auth(username: str, password: str) -> bool:
     global l_db
