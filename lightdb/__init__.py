@@ -15,7 +15,6 @@ from .lightdb import LightDB
 from .lightsql import Table
 from .dbconnect import get_connection
 
-# For backward compatibility
 connection = get_connection()
 
 __all__ = ['LightDB', 'Table', 'get_connection']

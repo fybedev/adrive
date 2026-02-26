@@ -37,43 +37,41 @@ app.register_blueprint(auth_bp)
 
 @app.route('/')
 def index():
-    # return redirect(url_for('upload'))
     return render_template('index.html')
 
 @app.route('/dashboard')
 def dashboard():
     db = l_db['files']
     udb = l_db['users']
-    
+
     if session.get('loggedIn', False) == False:
         flash('You must be signed in to view the dashboard!', 'error')
         return redirect(url_for('upload'))
-    
+
     username = session.get('username')
     userfiles = []
     quota_usage_gb = 0
-    
+
     if not username:
         flash('An error occurred. Please sign in again.', 'error')
         session['loggedIn'] = False
         session.pop('username', None)
         return redirect(url_for('upload'))
-    
+
     for file in db:
         if db[file].get('owner') == username:
             db[file]['file'] = file
             db[file]['code'] = file.split('_')[-1]
             db[file]['display_name'] = db[file].get('original_filename', file)
             userfiles.append(db[file])
-            
+
     for userfile in userfiles:
         usf_mb = userfile['size_megabytes']
         if usf_mb:
             quota_usage_gb += usf_mb / 1024
-            
+
     quota_usage_gb = round(quota_usage_gb, 1)
-    
-    # Render template with variables
+
     return render_template(
         'dashboard.html',
         files=userfiles,
@@ -166,20 +164,17 @@ def sendfile():
         loggedIn = session.get('loggedIn', False)
         username = session.get('username', '')
 
-
         if file:
             try:
                 original_filename = file.filename
                 extension = os.path.splitext(file.filename)[1].lower()
 
                 fileid = str(random.randint(100000, 99999999))
-                # Use secure_filename for the disk storage but keep original filename in DB
                 safe_filename = secure_filename(original_filename) or 'file'
                 dest_name = safe_filename + f'_{fileid}'
                 dest_path = os.path.join(app.config['UPLOAD_DIRECTORY'], dest_name)
 
                 file.save(dest_path)
-                print(dest_name)
 
                 try:
                     size_bytes = os.path.getsize(dest_path)
@@ -212,7 +207,7 @@ def sendfile():
                     remaining_gb = 0.0
 
                 entry = {
-                    "reusable": True if reusable else False, 
+                    "reusable": True if reusable else False,
                     "size_megabytes": size_megabytes,
                     "original_filename": original_filename
                 }
@@ -230,11 +225,10 @@ def sendfile():
 
             except RequestEntityTooLarge:
                 return 'File is larger than the size limit.'
-            
+
 @app.route('/delete/<code>', methods=['GET', 'POST'])
 def delete(code):
     db = l_db['files']
-    udb = l_db['users']
     for file in db:
         if file.split('_')[-1] == code:
             if db[file].get('owner') != session.get('username'):
@@ -243,24 +237,23 @@ def delete(code):
             try:
                 os.remove('uploads/' + file)
             except FileNotFoundError:
-                print('couldnt delete from os bc file not found.')
+                pass
             try:
                 os.remove('uploads/' + file.split('_')[0])
             except FileNotFoundError:
-                print('couldnt delete from os bc file not found. (2)')
+                pass
             db.pop(file)
             flash('File with code ' + code + ' has been deleted.', 'info')
             return redirect(url_for('dashboard'))
-            
+
 @app.route('/download')
 def download_without_code():
     flash('No code provided!', 'error')
     return redirect(url_for('upload'))
-    
+
 @app.route('/download/<code>', methods=['GET', 'POST'])
 def download(code):
     db = l_db['files']
-    udb = l_db['users']
     try:
         found = False
         filename = ''
@@ -269,23 +262,17 @@ def download(code):
             if file.split('_')[-1] == code:
                 found = True
                 filename = file
-        
+
         if not found:
-            print(filename)
-            # Search db for the entry with this code and remove it
             for file_entry in list(db.keys()):
                 if file_entry.split('_')[-1] == code:
-                    print(f"Deleting: {file_entry}")
-                    print
                     db.pop(file_entry)
-                    print(f"Deleted! DB now has {len(db)} files")
                     break
             flash('Invalid code! Check if you typed the correct code, and for one-time codes, make sure nobody else entered the code before you did.', 'error')
             return redirect(url_for('upload'))
         else:
-            # Get original filename from database if it exists
             original_filename = db[filename].get('original_filename', filename.replace(f'_{code}', ''))
-            
+
             os.rename('uploads/' + filename, 'uploads/' + filename.replace(f'_{code}', ''))
             def deleteFile():
                 db.pop(filename)
@@ -300,12 +287,8 @@ def download(code):
                 deleteFunc.start()
 
             return send_from_directory(app.config['UPLOAD_DIRECTORY'], filename.replace(f'_{code}', ''), as_attachment=True, download_name=original_filename)
-                
-    except Exception as e:
-        print(f"Error in download: {e}")
-        print(f"Type: {type(e)}")
-        import traceback
-        traceback.print_exc()
+
+    except Exception:
         flash('Invalid code! Check if you typed the correct code, and for one-time codes, make sure nobody else entered the code before you did.', 'error')
         return redirect(url_for('upload'))
 
@@ -323,7 +306,6 @@ def admin():
     db = l_db['files']
     udb = l_db['users']
 
-    # Calculate per-user storage usage
     user_usage = {}
     user_file_count = {}
     total_storage_mb = 0.0
@@ -407,7 +389,6 @@ def admin_delete_user():
         return redirect(url_for('admin'))
 
     l_db['users'] = new_users
-    # Remove files owned by the deleted user
     db = l_db['files']
     files_to_delete = [fkey for fkey in db if db[fkey].get('owner') == target]
     for fkey in files_to_delete:

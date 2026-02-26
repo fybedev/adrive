@@ -15,7 +15,7 @@ def check_dependencies():
     """Check if required dependencies are installed."""
     required_tools = ["git", "curl", "tar", "wget"]
     missing_tools = [tool for tool in required_tools if shutil.which(tool) is None]
-    
+
     if missing_tools:
         print("The following required tools are missing:")
         for tool in missing_tools:
@@ -42,12 +42,8 @@ def check_python_dependencies():
 
 def detect_installation() -> bool:
     """Detect if LightDB is already installed."""
-    installation_path = "lightdb"
-    if os.path.exists(installation_path):
-        return True
-    else:
-        return False
-    
+    return os.path.exists("lightdb")
+
 def install_lightdb():
     check_dependencies()
     check_python_dependencies()
@@ -55,11 +51,11 @@ def install_lightdb():
     installation_path = "lightdb"
     url = "https://fybe.dev/ldb/ldb.zip"
     zip_path = "lightdb.zip"
-    
+
     with Progress() as progress:
         response = requests.get(url, stream=True)
         total_size = int(response.headers.get('content-length', 0))
-        
+
         if total_size > 0:
             task = progress.add_task("Downloading LightDB...", total=total_size)
             downloaded = 0
@@ -75,7 +71,7 @@ def install_lightdb():
                 for chunk in response.iter_content(chunk_size=8192):
                     f.write(chunk)
                     progress.update(task, advance=len(chunk))
-    
+
     with zipfile.ZipFile(zip_path, 'r') as zip_ref:
         files = zip_ref.namelist()
         total_files = len(files)
@@ -85,7 +81,7 @@ def install_lightdb():
                 sleep(0.3)
                 zip_ref.extract(file, installation_path)
                 progress.update(task, advance=1)
-    
+
     os.remove(zip_path)
     with console.status("[bold cyan]Verifying LightDB installation...", spinner="dots"):
         sleep(0.3)
@@ -93,14 +89,14 @@ def install_lightdb():
             console.print("[green]✓ LightDB directory verified[/green]")
         else:
             console.print("[red]✗ Installation verification failed[/red]")
-    
+
     with console.status("[bold cyan]Checking LightDB modules: [bold magenta]base", spinner="dots"):
         sleep(0.5)
         if os.path.exists(installation_path + '/__init__.py'):
             console.print("[green]✓ Module verified: [/green][bold magenta]base[/bold magenta]")
         else:
             console.print("[red]✗ Module verification failed[/red]")
-    
+
     with console.status("[bold cyan]Checking LightDB modules: [bold magenta]dbconnect", spinner="dots"):
         sleep(0.5)
         if os.path.exists(installation_path + '/dbconnect.py'):
