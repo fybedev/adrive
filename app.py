@@ -5,8 +5,7 @@ from flask import (
     request,
     url_for,
     send_from_directory,
-    flash,
-    jsonify
+    flash
 )
 
 from tools.utils import redirect
