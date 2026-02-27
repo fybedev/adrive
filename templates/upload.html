@@ -88,10 +88,11 @@
             </form>
             <a href="/" onclick="localStorage.removeItem('lang')" class="sign-in-button" style="text-decoration: none; background: rgb(79, 92, 178)">Change Language</a>
             {% if not loggedIn %}
-            <a href="/login" class="sign-in-button" style="text-decoration: none; background: rgb(0, 81, 139)">Sign
+            <a href="/login.old" class="sign-in-button" style="text-decoration: none; background: rgb(0, 81, 139)">Sign
                 In</a>
             <a href="/register" class="sign-in-button"
                 style="text-decoration: none; background: rgb(32, 0, 139)">Register</a><br><br>
+            <p><a class="btn" style="color: gray; border: 1px solid gray;" href="/login">Login with FybeAuth</a></p>
             <p style="color: gray; font-size: 11px; text-align: center;">Signing in is not required. You can at any time
                 register and sign in to manage your existing codes for free. You can manage up to 3GB of files.</p>
             {% else %}

@@ -24,6 +24,8 @@ import os
 import random
 import threading
 import time
+import secrets
+import requests
 
 l_db = LightDB()
 
@@ -34,6 +36,86 @@ app.config['SECRET_KEY'] = str(random.randint(99999, 9999999))
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1)
 app.register_blueprint(geo_loc_bp)
 app.register_blueprint(auth_bp)
+
+OAUTH_SERVER = os.environ.get("OAUTH_SERVER_URL", "https://id.fybe.dev")
+CLIENT_ID = os.environ.get("OAUTH_CLIENT_ID", "QdoCYPGeuR7WBvYY2WeA66Mw6HvMsRymUzCTDEHhmSMrVn3mR60SoA")
+CLIENT_SECRET = os.environ.get("OAUTH_CLIENT_SECRET", "fUniOTtk58DIi7O4vOmffZ8JceJuWyo7g4PvTGzfVtfet2mbSDQeag")
+REDIRECT_URI = os.environ.get("REDIRECT_URI", "http://127.0.0.1:3133/callback")
+
+AUTHORIZE_URL = f"{OAUTH_SERVER}/oauth/authorize"
+TOKEN_URL = f"{OAUTH_SERVER}/oauth/token"
+USERINFO_URL = f"{OAUTH_SERVER}/api/userinfo"
+
+@app.route('/register')
+def register_redirect_to_fybeauth():
+    return redirect('https://id.fybe.dev/register')
+
+@app.route("/login")
+def login():
+    """Redirect the browser to the OAuth2 authorization endpoint."""
+    state = secrets.token_urlsafe(16)
+    session["oauth_state"] = state
+    params = {
+        "response_type": "code",
+        "client_id": CLIENT_ID,
+        "redirect_uri": REDIRECT_URI,
+        "scope": "profile",
+        "state": state,
+    }
+    from urllib.parse import urlencode
+    return redirect(f"{AUTHORIZE_URL}?{urlencode(params)}")
+
+
+@app.route("/callback")
+def callback():
+    """Handle the authorization code callback from the OAuth2 server."""
+    error = request.args.get("error")
+    if error:
+        return render_template("index.html", error=f"OAuth error: {error}")
+
+    state = request.args.get("state")
+    if state != session.pop("oauth_state", None):
+        return render_template("index.html", error="Invalid state parameter."), 400
+
+    code = request.args.get("code")
+    # Exchange authorization code for tokens
+    token_response = requests.post(
+        TOKEN_URL,
+        data={
+            "grant_type": "authorization_code",
+            "code": code,
+            "redirect_uri": REDIRECT_URI,
+        },
+        auth=(CLIENT_ID, CLIENT_SECRET),
+    )
+    if not token_response.ok:
+        return render_template(
+            "index.html",
+            error=f"Token exchange failed: {token_response.text}",
+        )
+
+    token_data = token_response.json()
+    session["access_token"] = token_data["access_token"]
+    session["refresh_token"] = token_data.get("refresh_token")
+
+    # Fetch user info
+    userinfo_response = requests.get(
+        USERINFO_URL,
+        headers={"Authorization": f"Bearer {session['access_token']}"},
+    )
+    if userinfo_response.ok:
+        session["user"] = userinfo_response.json()
+        session["loggedIn"] = True
+        session["username"] = session["user"].get("username", "Unknown")
+
+    return redirect(url_for("upload"))
+
+
+@app.route("/profile")
+def profile():
+    if "user" not in session:
+        return redirect(url_for("login"))
+    return render_template("profile.html", user=session["user"])
 
 @app.route('/')
 def index():

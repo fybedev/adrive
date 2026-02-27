@@ -21,10 +21,11 @@ def logout():
     # Sign out user and redirect to upload page
     session['loggedIn'] = False
     session.pop('username', None)
+    session.clear()
     flash('Successfully signed out!', 'info')
     return redirect(url_for('upload'))
 
-@auth_bp.route('/login', methods=['GET', 'POST'])
+@auth_bp.route('/login.old', methods=['GET', 'POST'])
 def login():
     if request.method == 'GET':
         return render_template('login.html')
@@ -41,7 +42,7 @@ def login():
     flash('Invalid username or password!', 'error')
     return redirect(url_for('auth.login'))
 
-@auth_bp.route('/register', methods=['GET', 'POST'])
+@auth_bp.route('/register.old', methods=['GET', 'POST'])
 def register():
     if request.method == 'GET':
         return render_template('register.html')
