@@ -1,3 +1,5 @@
+ADRIVE_VERSION = '0.4.2'
+
 from flask import (
     Flask,
     render_template,
@@ -5,8 +7,7 @@ from flask import (
     request,
     url_for,
     send_from_directory,
-    flash,
-    jsonify
+    flash
 )
 
 from tools.utils import redirect
@@ -37,7 +38,7 @@ app.register_blueprint(auth_bp)
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return render_template('index.html', version=ADRIVE_VERSION)
 
 @app.route('/dashboard')
 def dashboard():

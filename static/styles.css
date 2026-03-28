@@ -12,6 +12,8 @@
     --border-color: rgb(40, 40, 40);
     --input-bg: #FFFFFF;
     --input-text: #888888;
+    --card-bg: #f8f9fa;
+    --muted-text: #6c757d;
 }
 
 body.dark-mode {
@@ -21,6 +23,8 @@ body.dark-mode {
     --border-color: rgb(100, 100, 100);
     --input-bg: #2d2d2d;
     --input-text: #cccccc;
+    --card-bg: #262626;
+    --muted-text: #a5adb5;
 }
 
 * {
@@ -271,6 +275,31 @@ button[type='button']:hover,
     font-size: 16px;
     color: var(--text-color);
     word-break: break-word;
+}
+
+/* Bootstrap alert classes need explicit dark-mode colors */
+body.dark-mode .flashes .alert {
+    color: #e9ecef;
+}
+
+body.dark-mode .flashes .alert-primary {
+    background-color: #1e3a5f;
+    border-color: #2b4f7a;
+}
+
+body.dark-mode .flashes .alert-danger {
+    background-color: #4a1f25;
+    border-color: #6a2c34;
+}
+
+body.dark-mode .flashes .alert-warning {
+    background-color: #4d3b16;
+    border-color: #6a5320;
+}
+
+body.dark-mode .flashes .alert-info {
+    background-color: #143f47;
+    border-color: #1f5964;
 }
 
 @media screen and (max-width: 480px) {
@@ -648,6 +677,14 @@ body.dark-mode .theme-toggle {
 }
 
 /* Release Notes Mobile Styles */
+.release-notes {
+    color: var(--text-color);
+}
+
+.release-notes small {
+    color: var(--muted-text) !important;
+}
+
 @media screen and (max-width: 480px) {
     .release-notes {
         margin-top: 20px !important;
