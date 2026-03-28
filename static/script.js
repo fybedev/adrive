@@ -152,20 +152,20 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-const currentLang = localStorage.getItem("lang");
-const currentPath = window.location.pathname;
+// const currentLang = localStorage.getItem("lang");
+// const currentPath = window.location.pathname;
 
-if (currentLang === "en" && currentPath == "/upload_kr") {
-    window.location.replace("/upload");
-} 
+// if (currentLang === "en" && currentPath == "/upload_kr") {
+//     window.location.replace("/upload");
+// } 
 
-else if (currentLang === "kr" && currentPath == "/upload") {
-    window.location.replace("/upload_kr");
-}
+// else if (currentLang === "kr" && currentPath == "/upload") {
+//     window.location.replace("/upload_kr");
+// }
 
-if (currentLang == "en" && currentPath == "/") {
-    window.location.replace("/upload");
-}
-if (currentLang == "kr" && currentPath == "/") {
-    window.location.replace("/upload_kr");
-}
+// if (currentLang == "en" && currentPath == "/") {
+//     window.location.replace("/upload");
+// }
+// if (currentLang == "kr" && currentPath == "/") {
+//     window.location.replace("/upload_kr");
+// }
